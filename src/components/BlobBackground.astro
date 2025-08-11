@@ -1,15 +1,426 @@
 
-<div aria-hidden="true" class="fixed inset-0 -z-10 overflow-hidden">
-  <div class="absolute -top-1/3 -left-1/3 w-[80vmax] h-[80vmax] rounded-full blur-3xl"
-       style="background: radial-gradient(40% 40% at 50% 50%, rgba(255,255,255,0.12), transparent 70%);
-              animation: float 22s ease-in-out infinite;"></div>
-  <div class="absolute -bottom-1/3 -right-1/3 w-[80vmax] h-[80vmax] rounded-full blur-3xl"
-       style="background: conic-gradient(from 90deg, rgba(255,255,255,0.10), transparent 60%);
-              animation: float 28s ease-in-out infinite reverse;"></div>
+<div class="gradient-bg" aria-hidden="true">
+  <!-- SVG filter for gooey effect -->
+  <svg>
+    <defs>
+      <filter id="goo">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="gradients-container">
+    <div class="g1"></div>
+    <div class="g2"></div>
+    <div class="g3"></div>
+    <div class="g4"></div>
+    <div class="g5"></div>
+    <div class="g6"></div>
+    <div class="g7"></div>
+    <div class="g8"></div>
+    <div class="g9"></div>
+    <div class="g10"></div>
+    <div class="g11"></div>
+    <div class="g12"></div>
+    <div class="g13"></div>
+    <div class="g14"></div>
+    <div class="g15"></div>
+    <div class="interactive"></div>
+  </div>
 </div>
+
 <style>
-  @keyframes float {
-    0%,100% { transform: translate3d(0,0,0) scale(1); }
-    50% { transform: translate3d(2rem,-1rem,0) scale(1.04); }
+  :root {
+    --color-bg1: rgb(20, 20, 20);
+    --color-bg2: rgb(10, 10, 10);
+    --color1: 14, 90, 204;
+    --color2: 177, 59, 204;
+    --color3: 80, 176, 204;
+    --color4: 160, 40, 40;
+    --color5: 144, 144, 40;
+    --color6: 204, 80, 120;
+    --color7: 80, 204, 80;
+    --color8: 204, 160, 80;
+    --color9: 120, 80, 204;
+    --color10: 204, 120, 40;
+    --color11: 80, 204, 160;
+    --color12: 204, 80, 204;
+    --color13: 160, 204, 80;
+    --color14: 80, 120, 204;
+    --color15: 204, 80, 80;
+    --color-interactive: 112, 80, 204;
+    --circle-size: 60%;
+    --blending: hard-light;
+  }
+
+  .gradient-bg {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    overflow: hidden;
+    background: linear-gradient(40deg, var(--color-bg1), var(--color-bg2));
+    top: 0;
+    left: 0;
+    z-index: -10;
+  }
+
+  .gradient-bg svg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .gradients-container {
+    filter: url(#goo) blur(40px);
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    transition: opacity 1s ease-out;
+  }
+
+  .gradients-container.fade-out {
+    opacity: 0;
+    transition: opacity 1s ease-out;
+  }
+
+  .gradients-container.fade-in {
+    opacity: 0;
+    transition: opacity 2s ease-in;
+  }
+
+  .gradients-container.fade-in.loaded {
+    opacity: 1;
+  }
+
+  .g1 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color1), 0.8) 0, rgba(var(--color1), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: var(--circle-size);
+    height: var(--circle-size);
+    transform-origin: center center;
+    animation: moveVertical 45s ease-in-out infinite;
+    opacity: 0.6;
+  }
+
+  .g2 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color2), 0.8) 0, rgba(var(--color2), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: var(--circle-size);
+    height: var(--circle-size);
+    transform-origin: calc(50% - 400px);
+    animation: moveInCircle 35s ease-in-out infinite reverse;
+    opacity: 0.5;
+  }
+
+  .g3 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color3), 0.8) 0, rgba(var(--color3), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: var(--circle-size);
+    height: var(--circle-size);
+    transform-origin: calc(50% - 400px);
+    animation: moveInCircle 55s ease-in-out infinite;
+    opacity: 0.4;
+  }
+
+  .g4 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color4), 0.8) 0, rgba(var(--color4), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: var(--circle-size);
+    height: var(--circle-size);
+    transform-origin: calc(50% - 200px);
+    animation: moveHorizontal 50s ease-in-out infinite;
+    opacity: 0.3;
+  }
+
+  .g5 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color5), 0.8) 0, rgba(var(--color5), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: calc(var(--circle-size) * 2);
+    height: calc(var(--circle-size) * 2);
+    transform-origin: calc(50% - 800px) calc(50% + 200px);
+    animation: moveInCircle 40s ease-in-out infinite;
+    opacity: 0.4;
+  }
+
+  .g6 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color6), 0.8) 0, rgba(var(--color6), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: var(--circle-size);
+    height: var(--circle-size);
+    transform-origin: calc(50% + 300px);
+    animation: moveVertical 38s ease-in-out infinite reverse;
+    opacity: 0.5;
+  }
+
+  .g7 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color7), 0.8) 0, rgba(var(--color7), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: var(--circle-size);
+    height: var(--circle-size);
+    transform-origin: calc(50% - 600px);
+    animation: moveInCircle 42s ease-in-out infinite;
+    opacity: 0.4;
+  }
+
+  .g8 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color8), 0.8) 0, rgba(var(--color8), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: var(--circle-size);
+    height: var(--circle-size);
+    transform-origin: calc(50% + 200px);
+    animation: moveHorizontal 47s ease-in-out infinite reverse;
+    opacity: 0.3;
+  }
+
+  .g9 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color9), 0.8) 0, rgba(var(--color9), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: calc(var(--circle-size) * 1.5);
+    height: calc(var(--circle-size) * 1.5);
+    transform-origin: calc(50% - 500px) calc(50% - 300px);
+    animation: moveInCircle 33s ease-in-out infinite;
+    opacity: 0.4;
+  }
+
+  .g10 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color10), 0.8) 0, rgba(var(--color10), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: var(--circle-size);
+    height: var(--circle-size);
+    transform-origin: calc(50% + 700px);
+    animation: moveVertical 51s ease-in-out infinite;
+    opacity: 0.3;
+  }
+
+  .g11 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color11), 0.8) 0, rgba(var(--color11), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: var(--circle-size);
+    height: var(--circle-size);
+    transform-origin: calc(50% - 100px);
+    animation: moveInCircle 36s ease-in-out infinite reverse;
+    opacity: 0.5;
+  }
+
+  .g12 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color12), 0.8) 0, rgba(var(--color12), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: var(--circle-size);
+    height: var(--circle-size);
+    transform-origin: calc(50% + 100px);
+    animation: moveHorizontal 44s ease-in-out infinite;
+    opacity: 0.4;
+  }
+
+  .g13 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color13), 0.8) 0, rgba(var(--color13), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: calc(var(--circle-size) * 1.8);
+    height: calc(var(--circle-size) * 1.8);
+    transform-origin: calc(50% - 900px) calc(50% + 100px);
+    animation: moveInCircle 39s ease-in-out infinite;
+    opacity: 0.3;
+  }
+
+  .g14 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color14), 0.8) 0, rgba(var(--color14), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: var(--circle-size);
+    height: var(--circle-size);
+    transform-origin: calc(50% + 600px);
+    animation: moveVertical 48s ease-in-out infinite reverse;
+    opacity: 0.4;
+  }
+
+  .g15 {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color15), 0.8) 0, rgba(var(--color15), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: var(--circle-size);
+    height: var(--circle-size);
+    transform-origin: calc(50% - 300px);
+    animation: moveInCircle 46s ease-in-out infinite;
+    opacity: 0.3;
+  }
+
+  .interactive {
+    position: absolute;
+    background: radial-gradient(circle at center, rgba(var(--color-interactive), 0.8) 0, rgba(var(--color-interactive), 0) 50%) no-repeat;
+    mix-blend-mode: var(--blending);
+    width: 100%;
+    height: 100%;
+    top: -50%;
+    left: -50%;
+    opacity: 0.3;
+  }
+
+  @keyframes moveInCircle {
+    0% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(180deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes moveVertical {
+    0% {
+      transform: translateY(-50%);
+    }
+    50% {
+      transform: translateY(50%);
+    }
+    100% {
+      transform: translateY(-50%);
+    }
+  }
+
+  @keyframes moveHorizontal {
+    0% {
+      transform: translateX(-50%) translateY(-10%);
+    }
+    50% {
+      transform: translateX(50%) translateY(10%);
+    }
+    100% {
+      transform: translateX(-50%) translateY(-10%);
+    }
+  }
+
+  /* Ensure content is readable over the background */
+  .gradient-bg + * {
+    position: relative;
+    z-index: 1;
   }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const interBubble = document.querySelector('.interactive');
+    const blobElements = document.querySelectorAll('.g1, .g2, .g3, .g4, .g5, .g6, .g7, .g8, .g9, .g10, .g11, .g12, .g13, .g14, .g15');
+    const gradientsContainer = document.querySelector('.gradients-container');
+    
+    // Start with fade-in effect
+    if (gradientsContainer) {
+      gradientsContainer.classList.add('fade-in');
+      // Trigger fade-in after a brief delay
+      setTimeout(() => {
+        gradientsContainer.classList.add('loaded');
+      }, 100);
+    }
+    
+    // Function to get random position within viewport bounds
+    function getRandomPosition() {
+      const margin = 15;
+      const x = Math.random() * (window.innerWidth - margin * 2) + margin;
+      const y = Math.random() * (window.innerHeight - margin * 2) + margin;
+      return { x, y };
+    }
+
+    // Function to get or create random positions for blobs
+    function getBlobPositions() {
+      // Create new random positions
+      const positions = {};
+      blobElements.forEach((blob, index) => {
+        positions[index] = getRandomPosition();
+      });
+      return positions;
+    }
+
+    // Function to get or create random animation offsets
+    function getAnimationOffsets() {
+      // Create random animation offsets for each blob
+      const offsets = {};
+      blobElements.forEach((blob, index) => {
+        offsets[index] = Math.random() * 100; // Random offset between 0-100%
+      });
+      return offsets;
+    }
+
+    // Apply positions and animation offsets to blobs
+    function positionBlobs() {
+      const positions = getBlobPositions();
+      const offsets = getAnimationOffsets();
+      
+      blobElements.forEach((blob, index) => {
+        const pos = positions[index];
+        const offset = offsets[index];
+        
+        if (pos) {
+          blob.style.left = `${pos.x}px`;
+          blob.style.top = `${pos.y}px`;
+        }
+        
+        if (offset !== undefined) {
+          // Apply animation offset to make each blob start at a different point in its animation
+          blob.style.animationDelay = `-${offset}s`;
+        }
+      });
+    }
+
+    // Position blobs on load
+    positionBlobs();
+
+    // Mouse tracking for interactive blob
+    if (interBubble) {
+      let curX = window.innerWidth / 2;
+      let curY = window.innerHeight / 2;
+      let tgX = curX;
+      let tgY = curY;
+
+      function move() {
+        curX += (tgX - curX) / 25; // Slower, smoother movement
+        curY += (tgY - curY) / 25;
+        interBubble.style.transform = `translate(${Math.round(curX)}px, ${Math.round(curY)}px)`;
+        requestAnimationFrame(move);
+      }
+
+      window.addEventListener('mousemove', (event) => {
+        tgX = event.clientX;
+        tgY = event.clientY;
+      });
+
+      move();
+    }
+
+    // Reposition blobs on window resize
+    window.addEventListener('resize', () => {
+      // Generate new random positions on resize
+      positionBlobs();
+    });
+
+    // Fade out effect when leaving the page
+    window.addEventListener('beforeunload', () => {
+      if (gradientsContainer) {
+        gradientsContainer.classList.add('fade-out');
+      }
+    });
+
+    // Also fade out on page visibility change (for better mobile support)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && gradientsContainer) {
+        gradientsContainer.classList.add('fade-out');
+      }
+    });
+  });
+</script>

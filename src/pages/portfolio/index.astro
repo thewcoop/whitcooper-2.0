@@ -5,10 +5,16 @@ const projects = await getCollection('portfolio');
 const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
 ---
 <Layout title="Portfolio">
-  <section class="py-10">
-    <div class="flex flex-wrap justify-center gap-2 mb-8">
+  <section class="py-10 mx-[10%]">
+    <div class="flex flex-wrap justify-center gap-2 mb-8" id="filter-buttons">
       {tags.map(tag => (
-        <button data-filter={tag} class="px-3 py-1 rounded-full border border-fg/30 text-sm hover:bg-fg/10">{tag}</button>
+        <button 
+          data-filter={tag} 
+          class="px-3 py-1 rounded-full border border-fg/30 text-sm hover:bg-fg/10 transition-all duration-200 filter-btn"
+          data-selected={tag === 'All' ? 'true' : 'false'}
+        >
+          {tag}
+        </button>
       ))}
     </div>
     <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3" id="portfolio-grid">
@@ -28,16 +34,77 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
     </div>
   </section>
   <script>
-    const buttons = document.querySelectorAll('[data-filter]');
-    const items = document.querySelectorAll('[data-tags]');
-    buttons.forEach(btn => {
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    const portfolioItems = document.querySelectorAll('[data-tags]');
+    let selectedTags = new Set(['All']); // Start with 'All' selected
+
+    // Function to update button visual states
+    function updateButtonStates() {
+      filterButtons.forEach(btn => {
+        const tag = btn.dataset.filter;
+        const isSelected = selectedTags.has(tag);
+        
+        if (isSelected) {
+          btn.classList.add('bg-fg', 'text-bg');
+          btn.classList.remove('border-fg/30', 'hover:bg-fg/10');
+          btn.dataset.selected = 'true';
+        } else {
+          btn.classList.remove('bg-fg', 'text-bg');
+          btn.classList.add('border-fg/30', 'hover:bg-fg/10');
+          btn.dataset.selected = 'false';
+        }
+      });
+    }
+
+    // Function to filter portfolio items
+    function filterItems() {
+      portfolioItems.forEach(item => {
+        const itemTags = item.dataset.tags.split(',');
+        
+        // Show item if 'All' is selected OR if item has any of the selected tags
+        const shouldShow = selectedTags.has('All') || 
+                          itemTags.some(tag => selectedTags.has(tag));
+        
+        item.style.display = shouldShow ? '' : 'none';
+      });
+    }
+
+    // Add click handlers to filter buttons
+    filterButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const tag = btn.dataset.filter;
-        items.forEach(it => {
-          it.style.display = tag === 'All' || it.dataset.tags.includes(tag) ? '' : 'none';
-        });
+        
+        if (tag === 'All') {
+          // If 'All' is clicked, clear other selections and select only 'All'
+          selectedTags.clear();
+          selectedTags.add('All');
+        } else {
+          // Remove 'All' from selection when specific tags are selected
+          selectedTags.delete('All');
+          
+          // Toggle the clicked tag
+          if (selectedTags.has(tag)) {
+            selectedTags.delete(tag);
+          } else {
+            selectedTags.add(tag);
+          }
+          
+          // If no specific tags are selected, default back to 'All'
+          if (selectedTags.size === 0) {
+            selectedTags.add('All');
+          }
+        }
+        
+        // Update UI and filter items
+        updateButtonStates();
+        filterItems();
       });
     });
+
+    // Initialize button states
+    updateButtonStates();
+
+    // Video click handlers
     document.querySelectorAll('[data-video]').forEach(el => {
       const url = el.dataset.video;
       el.addEventListener('click', () => {

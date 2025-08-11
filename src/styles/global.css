@@ -3,6 +3,63 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
-body { @apply bg-bg text-fg antialiased; }
-.cursor-dot, .cursor-ring { position: fixed; pointer-events: none; z-index: 50; }
+:root { 
+  color-scheme: dark; 
+}
+
+body { 
+  @apply text-fg antialiased;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  background: transparent; /* Remove solid background to show reactive background */
+}
+
+/* Smooth scrolling and transitions */
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Typography improvements */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-semibold tracking-tight;
+}
+
+/* Magical particle system styles */
+.magical-particle {
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Custom component styles */
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-2xl border border-fg/10 bg-fg/5 px-6 py-4 text-sm font-medium text-fg hover:border-fg/30 hover:bg-fg/10 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98];
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-2xl border border-fg/10 bg-transparent px-6 py-4 text-sm font-medium text-fg/80 hover:border-fg/30 hover:text-fg hover:bg-fg/5 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98];
+}
+
+/* Text gradient utility */
+.text-gradient {
+  background: linear-gradient(135deg, #fafafa 0%, #a1a1aa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Improved focus states */
+*:focus-visible {
+  @apply outline-none ring-2 ring-fg/50 ring-offset-2 ring-offset-transparent;
+}
+
+/* Ensure content is properly layered over the reactive background */
+main, section, article, div[class*="container"] {
+  position: relative;
+  z-index: 1;
+}
