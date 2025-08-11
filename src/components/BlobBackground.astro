@@ -324,12 +324,12 @@
     z-index: 1;
   }
 
-  /* Mobile-specific overrides - completely disable animations */
+  /* Mobile-specific overrides - gently disable animations only */
   @media (max-width: 768px), (hover: none), (pointer: coarse) {
     .g1, .g2, .g3, .g4, .g5, .g6, .g7, .g8, .g9, .g10, .g11, .g12, .g13, .g14, .g15 {
       animation: none !important;
       transition: none !important;
-      transform: none !important;
+      /* Don't override transform - let blobs stay in their positioned places */
     }
     
     .interactive {
@@ -416,7 +416,7 @@
     // Position blobs on load
     positionBlobs();
 
-    // COMPLETELY DISABLE ALL INTERACTIONS ON MOBILE
+    // GENTLE mobile approach - just disable animations, don't block events
     if (isMobile) {
       // Disable all blob animations on mobile
       blobElements.forEach(blob => {
@@ -424,29 +424,16 @@
         blob.style.transition = 'none';
       });
       
-      // Disable interactive blob completely on mobile
+      // Hide interactive blob on mobile
       if (interBubble) {
         interBubble.style.display = 'none';
       }
       
-      // Disable resize listener on mobile
+      // Don't reposition blobs on mobile resize
       const mobileResizeHandler = () => {
         // Do nothing on mobile - no repositioning
       };
       window.addEventListener('resize', mobileResizeHandler);
-      
-      // Disable all touch and scroll related events on mobile
-      const preventMobileInteractions = (e) => {
-        // Prevent any blob movement on mobile
-        e.preventDefault();
-        e.stopPropagation();
-      };
-      
-      // Add passive listeners to prevent any blob interference
-      document.addEventListener('touchstart', preventMobileInteractions, { passive: false });
-      document.addEventListener('touchmove', preventMobileInteractions, { passive: false });
-      document.addEventListener('touchend', preventMobileInteractions, { passive: false });
-      document.addEventListener('scroll', preventMobileInteractions, { passive: false });
       
     } else {
       // Desktop behavior - full interactive experience
