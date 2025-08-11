@@ -17,13 +17,22 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
         </button>
       ))}
     </div>
+
     <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3" id="portfolio-grid">
-      {projects.map(({ data, slug }) => (
+      {projects.map(({ data }) => (
         <div class="space-y-2" data-tags={data.tags.join(',')}>
-          <div class="relative aspect-video cursor-pointer" data-video={data.videoURL}>
-            {data.thumbnail && <img src={data.thumbnail} alt={data.title} class="absolute inset-0 w-full h-full object-cover" />}
-            <div class="absolute inset-0 flex items-center justify-center text-4xl text-white bg-black/40">▶</div>
+          <div class="relative aspect-video cursor-pointer group" data-video={data.videoURL}>
+            {data.thumbnail && (
+              <img
+                src={data.thumbnail}
+                alt={data.title}
+                class="absolute inset-0 w-full h-full object-cover"
+                loading="lazy"
+              />
+            )}
+            <div class="absolute inset-0 flex items-center justify-center text-4xl text-white/95 bg-black/40 group-hover:bg-black/50 transition-colors">▶</div>
           </div>
+
           <h3 class="font-semibold">{data.title}</h3>
           {data.description && <p class="text-sm opacity-80">{data.description}</p>}
           <div class="flex flex-wrap gap-1 text-xs opacity-70">
@@ -33,12 +42,41 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
       ))}
     </div>
   </section>
+
   <script>
+    // --- Helpers ---
+    function toEmbedURL(raw) {
+      if (!raw) return '';
+
+      // YouTube — handle watch, short, and embed URLs
+      if (/youtu\.?be/.test(raw)) {
+        const idMatch =
+          raw.match(/[?&]v=([^&]+)/) ||            // https://www.youtube.com/watch?v=ID
+          raw.match(/youtu\.be\/([^?&/]+)/) ||     // https://youtu.be/ID
+          raw.match(/embed\/([^?&/]+)/);           // https://www.youtube.com/embed/ID
+        const id = idMatch?.[1];
+        return id ? `https://www.youtube.com/embed/${id}` : raw;
+      }
+
+      // Vimeo — convert to player URL
+      if (/vimeo\.com/.test(raw)) {
+        const idMatch = raw.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+        const id = idMatch?.[1];
+        // dnt=1 (Do Not Track), hide chrome for a cleaner look
+        return id
+          ? `https://player.vimeo.com/video/${id}?dnt=1&title=0&byline=0&portrait=0`
+          : raw;
+      }
+
+      // Fallback: assume it's already an embed or another provider
+      return raw;
+    }
+
+    // --- Filtering ---
     const filterButtons = document.querySelectorAll('[data-filter]');
     const portfolioItems = document.querySelectorAll('[data-tags]');
     let selectedTags = new Set(['All']); // Start with 'All' selected
 
-    // Function to update button visual states
     function updateButtonStates() {
       filterButtons.forEach(btn => {
         const tag = btn.dataset.filter;
@@ -56,65 +94,57 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
       });
     }
 
-    // Function to filter portfolio items
     function filterItems() {
       portfolioItems.forEach(item => {
-        const itemTags = item.dataset.tags.split(',');
-        
-        // Show item if 'All' is selected OR if item has any of the selected tags
-        const shouldShow = selectedTags.has('All') || 
-                          itemTags.some(tag => selectedTags.has(tag));
-        
+        const itemTags = (item.dataset.tags || '').split(',').map(s => s.trim()).filter(Boolean);
+        const shouldShow = selectedTags.has('All') || itemTags.some(tag => selectedTags.has(tag));
         item.style.display = shouldShow ? '' : 'none';
       });
     }
 
-    // Add click handlers to filter buttons
     filterButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const tag = btn.dataset.filter;
         
         if (tag === 'All') {
-          // If 'All' is clicked, clear other selections and select only 'All'
           selectedTags.clear();
           selectedTags.add('All');
         } else {
-          // Remove 'All' from selection when specific tags are selected
           selectedTags.delete('All');
-          
-          // Toggle the clicked tag
-          if (selectedTags.has(tag)) {
-            selectedTags.delete(tag);
-          } else {
-            selectedTags.add(tag);
-          }
-          
-          // If no specific tags are selected, default back to 'All'
-          if (selectedTags.size === 0) {
-            selectedTags.add('All');
-          }
+          if (selectedTags.has(tag)) selectedTags.delete(tag);
+          else selectedTags.add(tag);
+          if (selectedTags.size === 0) selectedTags.add('All');
         }
-        
-        // Update UI and filter items
+
         updateButtonStates();
         filterItems();
       });
     });
 
-    // Initialize button states
     updateButtonStates();
+    filterItems();
 
-    // Video click handlers
+    // --- Video click-to-embed (Vimeo/YouTube safe) ---
     document.querySelectorAll('[data-video]').forEach(el => {
-      const url = el.dataset.video;
+      const raw = el.dataset.video;
+      const src = toEmbedURL(raw);
+
       el.addEventListener('click', () => {
         const iframe = document.createElement('iframe');
-        iframe.src = url;
-        iframe.allowFullscreen = true;
+        iframe.src = src;
         iframe.className = 'w-full h-full';
+        iframe.loading = 'lazy';
+        iframe.allow = 'autoplay; fullscreen; picture-in-picture; clipboard-write';
+        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+        iframe.setAttribute('allowfullscreen', '');
+
+        // Replace the thumbnail/overlay with the embed
         el.innerHTML = '';
-        el.appendChild(iframe);
-      });
+        const wrapper = document.createElement('div');
+        wrapper.className = 'absolute inset-0';
+        wrapper.appendChild(iframe);
+        el.appendChild(wrapper);
+      }, { once: true }); // only replace once
     });
   </script>
 </Layout>
