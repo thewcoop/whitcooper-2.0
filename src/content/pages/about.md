@@ -1,6 +1,6 @@
 ---
 title: About
-headshot: https://i.imgur.com/3LwyDts.png
+headshot: /uploads/whit-prof-pic.png
 ---
 
 
