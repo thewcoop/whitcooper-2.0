@@ -1,9 +1,10 @@
 ---
-title: "Demo Reel"
-videoURL: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+title: Eleuthera
+videoURL: https://vimeo.com/1108267339?share=copy
 tags:
   - Editing
   - Motion Graphics
-description: "A fun mashup of clips."
-thumbnail: "/thumb1.svg"
+  - Color
+description: A fun recap video I filmed/edited/colored on a family trip to Eleuthera Island.
+thumbnail: https://i.imgur.com/CmpBnzh.jpeg
 ---
