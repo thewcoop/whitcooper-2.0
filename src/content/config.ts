@@ -1,4 +1,3 @@
-
 import { defineCollection, z } from 'astro:content';
 
 const blog = defineCollection({
@@ -7,8 +6,8 @@ const blog = defineCollection({
     title: z.string(),
     date: z.string(),
     coverImage: z.string().optional(),
-    summary: z.string().optional()
-  })
+    summary: z.string().optional(),
+  }),
 });
 
 const portfolio = defineCollection({
@@ -18,16 +17,22 @@ const portfolio = defineCollection({
     videoURL: z.string(),
     tags: z.array(z.enum(['Editing','Motion Graphics','VFX','Color','Sound Design'])),
     thumbnail: z.string().optional(),
-    description: z.string().optional()
-  })
+    description: z.string().optional(),
+  }),
 });
 
-const pages = defineCollection({
-  type: 'content',
+const home = defineCollection({
+  type: 'data',
   schema: z.object({
-    title: z.string(),
-    headshot: z.string().optional()
-  })
+    headline: z.string(),
+    subline: z.string().optional(),
+    intro: z.string().optional(),
+    ctaPrimaryLabel: z.string().optional(),
+    ctaPrimaryUrl: z.string().optional(),
+    ctaSecondaryLabel: z.string().optional(),
+    ctaSecondaryUrl: z.string().optional(),
+    heroImage: z.string().optional(),
+  }),
 });
 
-export const collections = { blog, portfolio, pages };
+export const collections = { blog, portfolio, home };
