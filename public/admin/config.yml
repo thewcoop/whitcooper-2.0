@@ -34,22 +34,22 @@ collections:
           - { label: Title, name: title, widget: string }
           - { label: Body, name: body, widget: markdown }
           - { label: Headshot, name: headshot, widget: image }
- - name: "home"
-  label: "Home"
-  delete: false
-  editor:
-    preview: false
-  files:
-    - name: "homepage"
-      label: "Homepage Content"
-      file: "src/content/home/homepage.json"   # ← updated path
-      fields:
-        - { label: "Headline", name: "headline", widget: "string" }
-        - { label: "Subline", name: "subline", widget: "string", required: false }
-        - { label: "Intro", name: "intro", widget: "markdown", required: false }
-        - { label: "Primary CTA Label", name: "ctaPrimaryLabel", widget: "string", required: false }
-        - { label: "Primary CTA URL", name: "ctaPrimaryUrl", widget: "string", required: false }
-        - { label: "Secondary CTA Label", name: "ctaSecondaryLabel", widget: "string", required: false }
-        - { label: "Secondary CTA URL", name: "ctaSecondaryUrl", widget: "string", required: false }
-        - { label: "Hero Image", name: "heroImage", widget: "image", required: false }
+  - name: "home"
+    label: "Home"
+    delete: false
+    editor:
+      preview: false
+    files:
+      - name: "homepage"
+        label: "Homepage Content"
+        file: "src/content/home/homepage.json"
+        fields:
+          - { label: "Headline", name: "headline", widget: "string" }
+          - { label: "Subline", name: "subline", widget: "string", required: false }
+          - { label: "Intro", name: "intro", widget: "markdown", required: false }
+          - { label: "Primary CTA Label", name: "ctaPrimaryLabel", widget: "string", required: false }
+          - { label: "Primary CTA URL", name: "ctaPrimaryUrl", widget: "string", required: false }
+          - { label: "Secondary CTA Label", name: "ctaSecondaryLabel", widget: "string", required: false }
+          - { label: "Secondary CTA URL", name: "ctaSecondaryUrl", widget: "string", required: false }
+          - { label: "Hero Image", name: "heroImage", widget: "image", required: false }
 
