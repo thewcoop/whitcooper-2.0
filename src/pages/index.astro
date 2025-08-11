@@ -204,7 +204,7 @@ const skills = Object.entries(modules).sort(([a],[b]) => a.localeCompare(b)).map
     opacity: 0;
     transform: translateY(100px);
     transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    will-change: transform, scale;
+    will-change: transform, opacity;
   }
 
   /* Skill card visible state */
@@ -215,7 +215,7 @@ const skills = Object.entries(modules).sort(([a],[b]) => a.localeCompare(b)).map
 
   /* Skill card hover effects with bounce physics */
   .skill-card:hover {
-    transform: translateY(0) scale(1.05);
+    transform: translateY(-4px) scale(1.02);
     transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.08) inset;
   }
