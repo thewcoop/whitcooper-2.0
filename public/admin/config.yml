@@ -42,7 +42,7 @@ collections:
   files:
     - name: "homepage"
       label: "Homepage Content"
-      file: "src/content/home/home.json"   # ← updated path
+      file: "src/content/home/homepage.json"   # ← updated path
       fields:
         - { label: "Headline", name: "headline", widget: "string" }
         - { label: "Subline", name: "subline", widget: "string", required: false }
