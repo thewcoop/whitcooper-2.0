@@ -9,6 +9,7 @@
 
 body { 
   @apply text-fg antialiased;
+  font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-feature-settings: "rlig" 1, "calt" 1;
   background: transparent; /* Remove solid background to show reactive background */
 }
@@ -27,6 +28,24 @@ html {
 /* Typography improvements */
 h1, h2, h3, h4, h5, h6 {
   @apply font-semibold tracking-tight;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 600;
+}
+
+/* Bold text styling */
+strong, b, .font-bold, .font-semibold {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Title and headline specific styling */
+.title, .headline, .text-gradient, .rainbow-text {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 700;
+}
+
+/* Body text styling */
+p, span, div, li, a, button, input, textarea, select {
+  font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* Magical particle system styles */

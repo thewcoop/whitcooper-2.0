@@ -11,8 +11,166 @@ const { post } = Astro.props;
 const { Content } = await post.render();
 ---
 <Layout title={post.data.title}>
-  <article class="prose prose-invert mx-auto py-10">
-    <h1>{post.data.title}</h1>
-    <Content />
+  <article class="max-w-4xl mx-auto py-16 px-6">
+    <!-- Back Button -->
+    <div class="mb-8">
+      <a href="/blog" class="back-button wc-card inline-flex items-center gap-3 px-6 py-3 group hover:scale-105 transition-all duration-300">
+        <svg class="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+        Back to Blog
+      </a>
+    </div>
+
+    <!-- Post Header -->
+    <header class="post-header wc-card p-8 mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gradient leading-tight mb-6">
+        {post.data.title}
+      </h1>
+      
+      <div class="flex items-center gap-4 text-sm text-neutral-400">
+        <time datetime={post.data.date} class="flex items-center gap-2">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+          </svg>
+          {new Date(post.data.date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}
+        </time>
+        
+        {post.data.summary && (
+          <span class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+            </svg>
+            {post.data.summary}
+          </span>
+        )}
+      </div>
+    </header>
+
+    <!-- Post Content -->
+    <div class="post-content wc-card p-8 prose prose-invert prose-lg max-w-none">
+      <Content />
+    </div>
+
+    <!-- Navigation Footer -->
+    <footer class="mt-12 flex justify-between">
+      <a href="/blog" class="wc-card px-6 py-3 group hover:scale-105 transition-all duration-300">
+        ← All Posts
+      </a>
+    </footer>
   </article>
 </Layout>
+
+<style>
+  /* Glass card styles matching the blog index */
+  .wc-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 20px 50px rgba(0,0,0,0.4);
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .wc-card:hover {
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.08) inset;
+  }
+
+  /* Back button specific styling */
+  .back-button {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  /* Post header and content animations */
+  .post-header, .post-content {
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+
+  .post-content {
+    animation-delay: 0.2s;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Text gradient utility */
+  .text-gradient {
+    background: linear-gradient(135deg, #fafafa 0%, #a1a1aa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Enhanced prose styling */
+  .prose {
+    color: #f6f6f6;
+  }
+
+  .prose h2, .prose h3, .prose h4 {
+    color: #fafafa;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .prose p {
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+  }
+
+  .prose a {
+    color: #fbbf24;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s ease;
+  }
+
+  .prose a:hover {
+    border-bottom-color: #fbbf24;
+  }
+
+  .prose ul, .prose ol {
+    margin-bottom: 1.5rem;
+  }
+
+  .prose li {
+    margin-bottom: 0.5rem;
+  }
+
+  .prose blockquote {
+    border-left: 4px solid #fbbf24;
+    padding-left: 1.5rem;
+    margin: 2rem 0;
+    font-style: italic;
+    color: #a1a1aa;
+  }
+
+  .prose code {
+    background: rgba(255,255,255,0.1);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .prose pre {
+    background: rgba(0,0,0,0.3);
+    padding: 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 2rem 0;
+  }
+</style>

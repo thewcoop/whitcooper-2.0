@@ -35,4 +35,24 @@ const home = defineCollection({
   }),
 });
 
-export const collections = { blog, portfolio, home };
+const skills = defineCollection({
+  type: 'data',
+  schema: z.object({
+    name: z.string(),
+    pov: z.string(),
+    highlights: z.array(z.object({
+      item: z.string()
+    }))
+  }),
+});
+
+const pages = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    body: z.string().optional(),
+    headshot: z.string().optional(),
+  }),
+});
+
+export const collections = { blog, portfolio, home, skills, pages };

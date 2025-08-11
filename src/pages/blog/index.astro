@@ -2,15 +2,114 @@
 import Layout from '../../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 const posts = await getCollection('blog');
+
+// Sort posts chronologically (newest first)
+const sortedPosts = posts.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
 ---
 <Layout title="Blog">
-  <section class="max-w-3xl mx-auto py-10 space-y-8">
-    {posts.map(post => (
-      <article class="space-y-1">
-        <h2 class="text-2xl font-semibold"><a href={`/blog/${post.slug}/`}>{post.data.title}</a></h2>
-        <p class="text-sm opacity-60">{new Date(post.data.date).toLocaleDateString()}</p>
-        {post.data.summary && <p>{post.data.summary}</p>}
-      </article>
-    ))}
+  <section class="max-w-4xl mx-auto py-16 px-6">
+    <header class="text-center mb-16">
+      <h1 class="text-5xl font-bold tracking-tight text-gradient leading-tight mb-6">
+        Blog
+      </h1>
+      <p class="text-xl opacity-80 max-w-2xl mx-auto">
+        Thoughts, insights, and behind-the-scenes from the creative process.
+      </p>
+    </header>
+
+    <div class="space-y-8">
+      {sortedPosts.map((post, index) => (
+        <a href={`/blog/${post.slug}/`} class="block">
+          <article class="blog-card wc-card p-8 group cursor-pointer transition-all duration-500 hover:scale-[1.02]" data-index={index}>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div class="flex-1">
+                <h2 class="text-2xl font-semibold mb-3 group-hover:text-orange-400 transition-colors duration-300">
+                  {post.data.title}
+                </h2>
+                {post.data.summary && (
+                  <p class="text-neutral-300 mb-4 leading-relaxed">
+                    {post.data.summary}
+                  </p>
+                )}
+                <div class="flex items-center gap-4 text-sm text-neutral-400">
+                  <time datetime={post.data.date} class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                    </svg>
+                    {new Date(post.data.date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </time>
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    Read more
+                  </span>
+                </div>
+              </div>
+            </div>
+          </article>
+        </a>
+      ))}
+    </div>
+
+    {sortedPosts.length === 0 && (
+      <div class="text-center py-16">
+        <div class="wc-card p-8">
+          <h3 class="text-xl font-medium mb-4">No posts yet</h3>
+          <p class="text-neutral-400">Check back soon for new content!</p>
+        </div>
+      </div>
+    )}
   </section>
 </Layout>
+
+<style>
+  /* Glass card styles matching the contact page */
+  .wc-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 20px 50px rgba(0,0,0,0.4);
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .wc-card:hover {
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.08) inset;
+  }
+
+  /* Blog card specific animations */
+  .blog-card {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .blog-card:nth-child(1) { animation-delay: 0.1s; }
+  .blog-card:nth-child(2) { animation-delay: 0.2s; }
+  .blog-card:nth-child(3) { animation-delay: 0.3s; }
+  .blog-card:nth-child(4) { animation-delay: 0.4s; }
+  .blog-card:nth-child(5) { animation-delay: 0.5s; }
+  .blog-card:nth-child(6) { animation-delay: 0.6s; }
+
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Text gradient utility */
+  .text-gradient {
+    background: linear-gradient(135deg, #fafafa 0%, #a1a1aa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+</style>

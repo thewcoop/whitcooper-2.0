@@ -2,10 +2,146 @@
 import Layout from '../layouts/Layout.astro';
 import { getEntryBySlug } from 'astro:content';
 const about = await getEntryBySlug('pages', 'about');
-const { Content } = await about.render();
 ---
 <Layout title="About">
-  <article class="prose prose-invert mx-auto py-10">
-    <Content />
-  </article>
+  <section class="max-w-4xl mx-auto py-16 px-6">
+    <!-- About Content -->
+    <div class="about-content">
+      <!-- Profile Section -->
+      <div class="profile-section mb-12">
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
+          <!-- Profile Image -->
+          <div class="flex-shrink-0">
+            <img
+              src={about?.data?.headshot || "https://i.imgur.com/3LwyDts.png"}
+              alt="Whit Cooper"
+              class="w-48 h-48 md:w-64 md:h-64"
+            />
+          </div>
+          
+          <!-- Profile Info -->
+          <div class="flex-1 text-center md:text-left">
+            <h2 class="text-3xl font-bold mb-4 text-gradient">
+              Whit Cooper
+            </h2>
+            <p class="text-xl text-neutral-300 mb-4">
+              Creative Video Editor & Motion Designer
+            </p>
+            <p class="text-lg text-neutral-400 leading-relaxed">
+              Hi! I'm a Dallas-based creative professional who transforms raw footage into compelling stories. 
+              With expertise in editing, motion graphics, VFX, and color grading, I bring ideas to life through 
+              visual storytelling that actually sticks.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Content Section (if needed) -->
+      {about?.data?.additionalContent && (
+        <div class="additional-content wc-card p-8 prose prose-invert prose-lg max-w-none">
+          <div set:html={about.data.additionalContent} />
+        </div>
+      )}
+    </div>
+  </section>
 </Layout>
+
+<style>
+  /* Glass card styles matching other pages */
+  .wc-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 20px 50px rgba(0,0,0,0.4);
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .wc-card:hover {
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.08) inset;
+  }
+
+  /* Text gradient utility */
+  .text-gradient {
+    background: linear-gradient(135deg, #fafafa 0%, #a1a1aa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Enhanced prose styling */
+  .prose {
+    color: #f6f6f6;
+  }
+
+  .prose h2, .prose h3, .prose h4 {
+    color: #fafafa;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .prose p {
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+  }
+
+  .prose a {
+    color: #fbbf24;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s ease;
+  }
+
+  .prose a:hover {
+    border-bottom-color: #fbbf24;
+  }
+
+  .prose ul, .prose ol {
+    margin-bottom: 1.5rem;
+  }
+
+  .prose li {
+    margin-bottom: 0.5rem;
+  }
+
+  .prose blockquote {
+    border-left: 4px solid #fbbf24;
+    padding-left: 1.5rem;
+    margin: 2rem 0;
+    font-style: italic;
+    color: #a1a1aa;
+  }
+
+  .prose code {
+    background: rgba(255,255,255,0.1);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .prose pre {
+    background: rgba(0,0,0,0.3);
+    padding: 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 2rem 0;
+  }
+
+  /* Profile image styling - no glass card wrapper */
+  .profile-section img {
+    /* Transparent circle image - no additional styling needed */
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .profile-section {
+      text-align: center;
+    }
+    
+    .profile-section img {
+      margin: 0 auto;
+    }
+  }
+</style>

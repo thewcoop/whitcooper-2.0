@@ -36,20 +36,30 @@ collections:
           - { label: Headshot, name: headshot, widget: image }
   - name: "home"
     label: "Home"
-    delete: false
-    editor:
-      preview: false
-    files:
-      - name: "homepage"
-        label: "Homepage Content"
-        file: "src/content/home/homepage.json"
-        fields:
-          - { label: "Headline", name: "headline", widget: "string" }
-          - { label: "Subline", name: "subline", widget: "string", required: false }
-          - { label: "Intro", name: "intro", widget: "markdown", required: false }
-          - { label: "Primary CTA Label", name: "ctaPrimaryLabel", widget: "string", required: false }
-          - { label: "Primary CTA URL", name: "ctaPrimaryUrl", widget: "string", required: false }
-          - { label: "Secondary CTA Label", name: "ctaSecondaryLabel", widget: "string", required: false }
-          - { label: "Secondary CTA URL", name: "ctaSecondaryUrl", widget: "string", required: false }
-          - { label: "Hero Image", name: "heroImage", widget: "image", required: false }
+    folder: "src/content/home"
+    create: false
+    slug: "index"
+    extension: "json"
+    editor: { preview: false }
+    fields:
+      - { label: "Headline", name: "headline", widget: "string" }
+      - { label: "Subline", name: "subline", widget: "text", required: false }
+      - { label: "CTA: Portfolio Label", name: "ctaPortfolioLabel", widget: "string", default: "See the spells in action" }
+      - { label: "CTA: Portfolio Href", name: "ctaPortfolioHref", widget: "string", default: "/portfolio" }
+      - { label: "CTA: Contact Label", name: "ctaContactLabel", widget: "string", default: "Summon me" }
+      - { label: "CTA: Contact Href", name: "ctaContactHref", widget: "string", default: "/contact" }
+  - name: "skills"
+    label: "Skills"
+    folder: "src/content/skills"
+    create: true
+    slug: "{{slug}}"
+    extension: "json"
+    editor: { preview: false }
+    fields:
+      - { label: "Name", name: "name", widget: "select", options: ["Editing","Motion Graphics","Visual Effects","Color","Sound Design","3D","AI","Visualizers"] }
+      - { label: "POV", name: "pov", widget: "text" }
+      - label: "Highlights"
+        name: "highlights"
+        widget: "list"
+        fields: [{ label: "Item", name: "item", widget: "string" }]
 

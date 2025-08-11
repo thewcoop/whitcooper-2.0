@@ -10,12 +10,18 @@ const {
   intro = '',
   ctaPrimaryLabel = 'Explore my work',
   ctaPrimaryUrl = '/portfolio',
-  ctaSecondaryLabel = 'Read the blog',
+  ctaSecondaryLabel = 'Read my blog',
   ctaSecondaryUrl = '/blog',
   heroImage = ''
 } = home;
+
+// Load skills, sorted by filename (01-*, 02-*, etc.)
+const modules = import.meta.glob("../content/skills/*.json", { eager: true }) as Record<string, any>;
+const skills = Object.entries(modules).sort(([a],[b]) => a.localeCompare(b)).map(([,m]) => m.default);
 ---
+
 <Base title={`Whit Cooper — Home`}>
+  <!-- Original Homepage Content -->
   <main class="mx-auto max-w-4xl px-6 py-16 text-center">
     {heroImage && (
       <div class="mb-12 animate-fade-in">
@@ -28,7 +34,7 @@ const {
     )}
     
     <div class="space-y-6 animate-fade-in-up">
-      <h1 class="text-6xl font-bold tracking-tight text-gradient leading-tight">
+      <h1 class="text-6xl font-bold tracking-tight leading-tight rainbow-text">
         {headline}
       </h1>
       <p class="mt-6 text-xl opacity-90 leading-relaxed max-w-2xl mx-auto">
@@ -53,6 +59,39 @@ const {
       </a>
     </div>
   </main>
+
+  <!-- Skills Section -->
+  <section class="mx-auto max-w-6xl px-6 py-16">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {skills.map((s, index) => (
+        <article class="skill-card wc-card p-6 group cursor-pointer" data-index={index}>
+          <header class="flex items-baseline justify-between">
+            <h3 class="text-xl font-medium">{s.name}</h3>
+          </header>
+          <p class="mt-3 text-neutral-300">{s.pov}</p>
+          {s.highlights?.length > 0 && (
+            <ul class="mt-4 space-y-2 text-neutral-300">
+              {s.highlights.map((h: any) => <li class="flex gap-2">
+                <span class="mt-1 h-1.5 w-1.5 rounded-full bg-white/60"></span>
+                <span>{h.item}</span>
+              </li>)}
+            </ul>
+          )}
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <!-- Footer Section -->
+  <footer class="mx-auto max-w-6xl px-6 pb-16 text-sm text-neutral-400">
+    <div class="wc-card p-5 flex flex-wrap items-center justify-between gap-4">
+      <div>Got something atypical? Perfect.</div>
+      <div class="flex gap-3">
+        <a href="/contact" class="wc-card px-4 py-2">Summon me</a>
+        <a href="/portfolio" class="wc-card px-4 py-2">See the spells in action</a>
+      </div>
+    </div>
+  </footer>
 </Base>
 
 <style>
@@ -79,4 +118,162 @@ const {
   .animate-fade-in-up {
     animation: fade-in-up 0.8s ease-out;
   }
+
+  /* Rainbow gradient text for Creative Wizardry */
+  .rainbow-text {
+    background: linear-gradient(
+      to right,
+      #ffffff,
+      #ffffff,
+      #00ffff,
+      #0080ff,
+      #8000ff,
+      #ff80ff,
+      #ff0000,
+      #ffff00,
+      #80ff80,
+      #ffffff,
+      #ffffff
+    ) no-repeat 100% 0% / 900%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: rainbow-shift 12s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.6)) 
+            drop-shadow(0 0 40px rgba(128, 0, 255, 0.4)) 
+            drop-shadow(0 0 60px rgba(255, 0, 0, 0.3));
+  }
+
+  @keyframes rainbow-shift {
+    0% {
+      background-position: 100% 0%;
+      filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.6)) 
+              drop-shadow(0 0 40px rgba(128, 0, 255, 0.4)) 
+              drop-shadow(0 0 60px rgba(255, 0, 0, 0.3));
+    }
+    16.66% {
+      background-position: 80% 0%;
+      filter: drop-shadow(0 0 25px rgba(0, 128, 255, 0.7)) 
+              drop-shadow(0 0 50px rgba(0, 255, 255, 0.5)) 
+              drop-shadow(0 0 75px rgba(128, 0, 255, 0.4));
+    }
+    33.33% {
+      background-position: 60% 0%;
+      filter: drop-shadow(0 0 30px rgba(128, 0, 255, 0.8)) 
+              drop-shadow(0 0 60px rgba(0, 128, 255, 0.6)) 
+              drop-shadow(0 0 90px rgba(0, 255, 255, 0.5));
+    }
+    50% {
+      background-position: 40% 0%;
+      filter: drop-shadow(0 0 35px rgba(255, 128, 255, 0.9)) 
+              drop-shadow(0 0 70px rgba(128, 0, 255, 0.7)) 
+              drop-shadow(0 0 105px rgba(0, 128, 255, 0.6));
+    }
+    66.66% {
+      background-position: 20% 0%;
+      filter: drop-shadow(0 0 40px rgba(255, 0, 0, 1.0)) 
+              drop-shadow(0 0 80px rgba(255, 128, 255, 0.8)) 
+              drop-shadow(0 0 120px rgba(128, 0, 255, 0.7));
+    }
+    83.33% {
+      background-position: 0% 0%;
+      filter: drop-shadow(0 0 45px rgba(255, 255, 0, 1.0)) 
+              drop-shadow(0 0 90px rgba(255, 0, 0, 0.9)) 
+              drop-shadow(0 0 135px rgba(255, 128, 255, 0.8));
+    }
+    100% {
+      background-position: 100% 0%;
+      filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.6)) 
+              drop-shadow(0 0 40px rgba(128, 0, 255, 0.4)) 
+              drop-shadow(0 0 60px rgba(255, 0, 0, 0.3));
+    }
+  }
+
+  /* Glass card styles */
+  .wc-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 20px 50px rgba(0,0,0,0.4);
+    border-radius: 16px;
+  }
+
+  /* Skill card initial state - hidden and positioned below */
+  .skill-card {
+    opacity: 0;
+    transform: translateY(100px);
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform, scale;
+  }
+
+  /* Skill card visible state */
+  .skill-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Skill card hover effects with bounce physics */
+  .skill-card:hover {
+    transform: translateY(0) scale(1.05);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.08) inset;
+  }
+
+  /* Active state for future click functionality */
+  .skill-card:active {
+    transform: translateY(0) scale(1.02);
+    transition: all 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
 </style>
+
+<script>
+  // Scroll-triggered animation for skill cards
+  document.addEventListener('DOMContentLoaded', () => {
+    const skillCards = document.querySelectorAll('.skill-card');
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    // Function to update skill card animations based on scroll
+    function updateSkillCards() {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      
+      skillCards.forEach((card, index) => {
+        const rect = card.getBoundingClientRect();
+        const cardTop = rect.top;
+        const cardBottom = rect.bottom;
+        
+        // Check if card is entering viewport
+        if (cardTop < windowHeight && cardBottom > 0) {
+          // Calculate how much of the card is visible
+          const visibleRatio = Math.min(1, Math.max(0, (windowHeight - cardTop) / (rect.height + 100)));
+          
+          if (visibleRatio > 0.1) {
+            // Add visible class with staggered delay
+            setTimeout(() => {
+              card.classList.add('visible');
+            }, index * 50); // Stagger the animations
+          }
+        }
+      });
+      
+      lastScrollY = scrollY;
+      ticking = false;
+    }
+
+    // Throttle scroll events for performance
+    function requestTick() {
+      if (!ticking) {
+        requestAnimationFrame(updateSkillCards);
+        ticking = true;
+      }
+    }
+
+    // Listen for scroll events
+    window.addEventListener('scroll', requestTick, { passive: true });
+    
+    // Initial check for cards already in view
+    updateSkillCards();
+  });
+</script>
