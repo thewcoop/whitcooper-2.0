@@ -1,7 +1,7 @@
 ---
-title: "About"
-headshot: "/headshot.svg"
+title: About
+headshot: https://i.imgur.com/3LwyDts.png
 ---
-![Headshot](/headshot.svg)
 
-Hi! I'm Whit Cooper, a creative video editor and motion designer.
+
+Hi! I'm **Whit Cooper**, a creative video editor and motion designer.
