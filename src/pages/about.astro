@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getEntryBySlug } from 'astro:content';
+const about = await getEntryBySlug('pages', 'about');
+const { Content } = await about.render();
+---
+<Layout title="About">
+  <article class="prose prose-invert mx-auto py-10">
+    <Content />
+  </article>
+</Layout>

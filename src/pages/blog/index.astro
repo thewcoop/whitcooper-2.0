@@ -1,0 +1,16 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+const posts = await getCollection('blog');
+---
+<Layout title="Blog">
+  <section class="max-w-3xl mx-auto py-10 space-y-8">
+    {posts.map(post => (
+      <article class="space-y-1">
+        <h2 class="text-2xl font-semibold"><a href={`/blog/${post.slug}/`}>{post.data.title}</a></h2>
+        <p class="text-sm opacity-60">{new Date(post.data.date).toLocaleDateString()}</p>
+        {post.data.summary && <p>{post.data.summary}</p>}
+      </article>
+    ))}
+  </section>
+</Layout>
