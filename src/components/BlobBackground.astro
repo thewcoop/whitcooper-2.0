@@ -323,6 +323,24 @@
     position: relative;
     z-index: 1;
   }
+
+  /* Mobile-specific overrides - completely disable animations */
+  @media (max-width: 768px), (hover: none), (pointer: coarse) {
+    .g1, .g2, .g3, .g4, .g5, .g6, .g7, .g8, .g9, .g10, .g11, .g12, .g13, .g14, .g15 {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+    }
+    
+    .interactive {
+      display: none !important;
+    }
+    
+    .gradients-container {
+      filter: url(#goo) blur(40px);
+      /* Keep the blur effect but disable all movement */
+    }
+  }
 </style>
 
 <script>
@@ -331,10 +349,11 @@
     const blobElements = document.querySelectorAll('.g1, .g2, .g3, .g4, .g5, .g6, .g7, .g8, .g9, .g10, .g11, .g12, .g13, .g14, .g15');
     const gradientsContainer = document.querySelector('.gradients-container');
     
-    // Detect if device is mobile/touch
+    // More robust mobile detection
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                      ('ontouchstart' in window) || 
-                     (navigator.maxTouchPoints > 0);
+                     (navigator.maxTouchPoints > 0) ||
+                     (window.innerWidth <= 768);
     
     // Start with fade-in effect
     if (gradientsContainer) {
@@ -397,37 +416,69 @@
     // Position blobs on load
     positionBlobs();
 
-    // Mouse tracking for interactive blob - ONLY on desktop devices
-    if (interBubble && !isMobile) {
-      let curX = window.innerWidth / 2;
-      let curY = window.innerHeight / 2;
-      let tgX = curX;
-      let tgY = curY;
-
-      function move() {
-        curX += (tgX - curX) / 25; // Slower, smoother movement
-        curY += (tgY - curY) / 25;
-        interBubble.style.transform = `translate(${Math.round(curX)}px, ${Math.round(curY)}px)`;
-        requestAnimationFrame(move);
-      }
-
-      window.addEventListener('mousemove', (event) => {
-        tgX = event.clientX;
-        tgY = event.clientY;
+    // COMPLETELY DISABLE ALL INTERACTIONS ON MOBILE
+    if (isMobile) {
+      // Disable all blob animations on mobile
+      blobElements.forEach(blob => {
+        blob.style.animation = 'none';
+        blob.style.transition = 'none';
       });
+      
+      // Disable interactive blob completely on mobile
+      if (interBubble) {
+        interBubble.style.display = 'none';
+      }
+      
+      // Disable resize listener on mobile
+      const mobileResizeHandler = () => {
+        // Do nothing on mobile - no repositioning
+      };
+      window.addEventListener('resize', mobileResizeHandler);
+      
+      // Disable all touch and scroll related events on mobile
+      const preventMobileInteractions = (e) => {
+        // Prevent any blob movement on mobile
+        e.preventDefault();
+        e.stopPropagation();
+      };
+      
+      // Add passive listeners to prevent any blob interference
+      document.addEventListener('touchstart', preventMobileInteractions, { passive: false });
+      document.addEventListener('touchmove', preventMobileInteractions, { passive: false });
+      document.addEventListener('touchend', preventMobileInteractions, { passive: false });
+      document.addEventListener('scroll', preventMobileInteractions, { passive: false });
+      
+    } else {
+      // Desktop behavior - full interactive experience
+      
+      // Mouse tracking for interactive blob - ONLY on desktop devices
+      if (interBubble) {
+        let curX = window.innerWidth / 2;
+        let curY = window.innerHeight / 2;
+        let tgX = curX;
+        let tgY = curY;
 
-      move();
-    } else if (interBubble && isMobile) {
-      // On mobile, just keep the interactive blob in a fixed position with gentle animation
-      interBubble.style.transform = 'translate(50%, 50%)';
-      interBubble.style.animation = 'mobileFloat 20s ease-in-out infinite';
+        function move() {
+          curX += (tgX - curX) / 25; // Slower, smoother movement
+          curY += (tgY - curY) / 25;
+          interBubble.style.transform = `translate(${Math.round(curX)}px, ${Math.round(curY)}px)`;
+          requestAnimationFrame(move);
+        }
+
+        window.addEventListener('mousemove', (event) => {
+          tgX = event.clientX;
+          tgY = event.clientY;
+        });
+
+        move();
+      }
+      
+      // Reposition blobs on window resize (desktop only)
+      window.addEventListener('resize', () => {
+        // Generate new random positions on resize
+        positionBlobs();
+      });
     }
-    
-    // Reposition blobs on window resize
-    window.addEventListener('resize', () => {
-      // Generate new random positions on resize
-      positionBlobs();
-    });
 
     // Fade out effect when leaving the page
     window.addEventListener('beforeunload', () => {
