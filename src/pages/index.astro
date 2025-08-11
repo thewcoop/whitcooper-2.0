@@ -1,9 +1,28 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Base from '../layouts/Base.astro';
+import home from '../content/home.json'; // <-- pulls Decap-edited content
+
+const {
+  headline = 'Creative Wizardry',
+  subline = 'Crafting videos, visuals, and stories that capture the imagination.',
+  intro = '',
+  ctaPrimaryLabel = 'Explore my work',
+  ctaPrimaryUrl = '/portfolio',
+  ctaSecondaryLabel = 'Read the blog',
+  ctaSecondaryUrl = '/blog',
+  heroImage = ''
+} = home;
 ---
-<Layout title="Home">
-  <section class="flex flex-col items-center justify-center py-20 text-center gap-4">
-    <h1 class="text-6xl font-extrabold">Welcome to Whit Cooper's World</h1>
-    <p class="text-xl opacity-80">Video wizardry and creative vibes</p>
-  </section>
-</Layout>
+
+<Base title={`Whit Cooper — Home`}>
+  <main class="mx-auto max-w-3xl px-6 py-12 text-center">
+    {heroImage && <img src={heroImage} alt="Hero" class="mx-auto mb-8 rounded-2xl border border-fg/10 max-h-72 object-cover" />}
+    <h1 class="text-5xl font-bold tracking-tight">{headline}</h1>
+    <p class="mt-4 opacity-80">{subline}</p>
+    {intro && <div class="prose prose-invert mx-auto mt-8" set:html={intro} />}
+    <div class="mt-12 grid grid-cols-2 gap-4">
+      <a href={ctaPrimaryUrl} class="rounded-2xl border border-fg/10 p-6 hover:border-fg/30 transition">{ctaPrimaryLabel} →</a>
+      <a href={ctaSecondaryUrl} class="rounded-2xl border border-fg/10 p-6 hover:border-fg/30 transition">{ctaSecondaryLabel} →</a>
+    </div>
+  </main>
+</Base>
