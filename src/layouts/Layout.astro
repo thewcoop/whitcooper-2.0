@@ -1,0 +1,21 @@
+---
+import BlobBackground from '../components/BlobBackground.astro';
+import NavTimeline from '../components/NavTimeline.astro';
+import '../styles/global.css';
+const { title } = Astro.props;
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title ? `${title} | Whit Cooper` : 'Whit Cooper'}</title>
+  </head>
+  <body class="relative min-h-screen overflow-x-hidden">
+    <BlobBackground />
+    <script src="/magic-cursor.js" is:inline></script>
+    <NavTimeline />
+    <main class="relative z-10">
+      <slot />
+    </main>
+  </body>
+</html>

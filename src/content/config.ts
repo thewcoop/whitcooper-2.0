@@ -22,4 +22,12 @@ const portfolio = defineCollection({
   })
 });
 
-export const collections = { blog, portfolio };
+const pages = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    headshot: z.string().optional()
+  })
+});
+
+export const collections = { blog, portfolio, pages };

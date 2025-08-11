@@ -1,0 +1,53 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+const projects = await getCollection('portfolio');
+const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
+---
+<Layout title="Portfolio">
+  <section class="py-10">
+    <div class="flex flex-wrap justify-center gap-2 mb-8">
+      {tags.map(tag => (
+        <button data-filter={tag} class="px-3 py-1 rounded-full border border-fg/30 text-sm hover:bg-fg/10">{tag}</button>
+      ))}
+    </div>
+    <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3" id="portfolio-grid">
+      {projects.map(({ data, slug }) => (
+        <div class="space-y-2" data-tags={data.tags.join(',')}>
+          <div class="relative aspect-video cursor-pointer" data-video={data.videoURL}>
+            {data.thumbnail && <img src={data.thumbnail} alt={data.title} class="absolute inset-0 w-full h-full object-cover" />}
+            <div class="absolute inset-0 flex items-center justify-center text-4xl text-white bg-black/40">▶</div>
+          </div>
+          <h3 class="font-semibold">{data.title}</h3>
+          {data.description && <p class="text-sm opacity-80">{data.description}</p>}
+          <div class="flex flex-wrap gap-1 text-xs opacity-70">
+            {data.tags.map(t => <span class="px-2 py-1 border border-fg/30 rounded-full">{t}</span>)}
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+  <script>
+    const buttons = document.querySelectorAll('[data-filter]');
+    const items = document.querySelectorAll('[data-tags]');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tag = btn.dataset.filter;
+        items.forEach(it => {
+          it.style.display = tag === 'All' || it.dataset.tags.includes(tag) ? '' : 'none';
+        });
+      });
+    });
+    document.querySelectorAll('[data-video]').forEach(el => {
+      const url = el.dataset.video;
+      el.addEventListener('click', () => {
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.allowFullscreen = true;
+        iframe.className = 'w-full h-full';
+        el.innerHTML = '';
+        el.appendChild(iframe);
+      });
+    });
+  </script>
+</Layout>
