@@ -307,6 +307,17 @@
     }
   }
 
+  @keyframes mobileFloat {
+    0%, 100% {
+      transform: translate(50%, 50%) scale(1);
+      opacity: 0.3;
+    }
+    50% {
+      transform: translate(50%, 50%) scale(1.1);
+      opacity: 0.4;
+    }
+  }
+
   /* Ensure content is readable over the background */
   .gradient-bg + * {
     position: relative;
@@ -319,6 +330,11 @@
     const interBubble = document.querySelector('.interactive');
     const blobElements = document.querySelectorAll('.g1, .g2, .g3, .g4, .g5, .g6, .g7, .g8, .g9, .g10, .g11, .g12, .g13, .g14, .g15');
     const gradientsContainer = document.querySelector('.gradients-container');
+    
+    // Detect if device is mobile/touch
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                     ('ontouchstart' in window) || 
+                     (navigator.maxTouchPoints > 0);
     
     // Start with fade-in effect
     if (gradientsContainer) {
@@ -381,8 +397,8 @@
     // Position blobs on load
     positionBlobs();
 
-    // Mouse tracking for interactive blob
-    if (interBubble) {
+    // Mouse tracking for interactive blob - ONLY on desktop devices
+    if (interBubble && !isMobile) {
       let curX = window.innerWidth / 2;
       let curY = window.innerHeight / 2;
       let tgX = curX;
@@ -401,8 +417,12 @@
       });
 
       move();
+    } else if (interBubble && isMobile) {
+      // On mobile, just keep the interactive blob in a fixed position with gentle animation
+      interBubble.style.transform = 'translate(50%, 50%)';
+      interBubble.style.animation = 'mobileFloat 20s ease-in-out infinite';
     }
-
+    
     // Reposition blobs on window resize
     window.addEventListener('resize', () => {
       // Generate new random positions on resize
