@@ -1,6 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
-import home from '../content/home.json'; // <-- pulls Decap-edited content
+import { getEntry } from 'astro:content';
+
+const { data: home } = await getEntry('home', 'homepage');
 
 const {
   headline = 'Creative Wizardry',
@@ -13,7 +15,6 @@ const {
   heroImage = ''
 } = home;
 ---
-
 <Base title={`Whit Cooper — Home`}>
   <main class="mx-auto max-w-3xl px-6 py-12 text-center">
     {heroImage && <img src={heroImage} alt="Hero" class="mx-auto mb-8 rounded-2xl border border-fg/10 max-h-72 object-cover" />}
