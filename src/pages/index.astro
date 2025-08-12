@@ -71,10 +71,32 @@ const skills = Object.entries(modules).sort(([a],[b]) => a.localeCompare(b)).map
           <p class="mt-3 text-neutral-300">{s.pov}</p>
           {s.highlights?.length > 0 && (
             <ul class="mt-4 space-y-2 text-neutral-300">
-              {s.highlights.map((h: any) => <li class="flex gap-2">
-                <span class="mt-1 h-1.5 w-1.5 rounded-full bg-white/60"></span>
-                <span>{h.item}</span>
-              </li>)}
+              {s.highlights.map((h: any) => {
+                // Special case for wooper.world link
+                if (h.item === "Enter wooper.world") {
+                  return (
+                    <li class="flex gap-2">
+                      <span class="mt-1 h-1.5 w-1.5 rounded-full bg-white/60"></span>
+                      <a 
+                        href="https://www.wooper.world" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        class="rainbow-link hover:underline transition-all duration-300"
+                      >
+                        Enter wooper.world
+                      </a>
+                    </li>
+                  );
+                }
+                
+                // Regular highlight items
+                return (
+                  <li class="flex gap-2">
+                    <span class="mt-1 h-1.5 w-1.5 rounded-full bg-white/60"></span>
+                    <span>{h.item}</span>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </article>
@@ -142,6 +164,31 @@ const skills = Object.entries(modules).sort(([a],[b]) => a.localeCompare(b)).map
     filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.6)) 
             drop-shadow(0 0 40px rgba(128, 0, 255, 0.4)) 
             drop-shadow(0 0 60px rgba(255, 0, 0, 0.3));
+  }
+
+  /* Rainbow link styling for wooper.world */
+  .rainbow-link {
+    background: linear-gradient(
+      to right,
+      #00ffff,
+      #0080ff,
+      #8000ff,
+      #ff80ff,
+      #ff0000,
+      #ffff00,
+      #80ff80,
+      #00ffff
+    ) no-repeat 100% 0% / 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: rainbow-shift 8s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5));
+  }
+
+  .rainbow-link:hover {
+    filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.7)) 
+            drop-shadow(0 0 25px rgba(128, 0, 255, 0.5));
   }
 
   @keyframes rainbow-shift {

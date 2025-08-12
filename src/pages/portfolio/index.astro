@@ -99,7 +99,7 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
     <div class="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
       <div id="theater-window" class="wc-card w-full max-w-6xl max-h-[90vh] overflow-hidden transform scale-75 opacity-0 transition-all duration-700 ease-out">
         <!-- Header with close button -->
-        <div class="flex items-center justify-between p-4 sm:p-6">
+        <div class="flex items-center justify-between p-4 sm:p-6 border-b border-white/10 bg-black/20 backdrop-blur-sm sticky top-0 z-10">
           <h2 id="theater-title" class="text-xl sm:text-2xl font-bold text-gradient pr-4"></h2>
           <button id="theater-close" class="group p-2 hover:bg-white/10 rounded-full transition-all duration-300 flex-shrink-0">
             <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white/70 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,8 +108,8 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
           </button>
         </div>
         
-        <!-- Content -->
-        <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
           <!-- Video Container -->
           <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
             <div id="theater-video-container" class="w-full h-full"></div>
@@ -236,35 +236,6 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
         // Get viewport dimensions
         const viewportHeight = window.innerHeight;
         const viewportWidth = window.innerWidth;
-        
-        // Calculate available space (accounting for padding and margins)
-        const availableHeight = viewportHeight * 0.9; // 90% of viewport height
-        const availableWidth = Math.min(viewportWidth * 0.95, 1200); // 95% of viewport width, max 1200px
-        
-        // Set theater window dimensions
-        this.window.style.maxWidth = `${availableWidth}px`;
-        this.window.style.maxHeight = `${availableHeight}px`;
-        
-        // Use CSS transform scale to fit content if needed
-        this.window.style.transform = 'scale(1)';
-        
-        // Wait for next frame to measure actual content size
-        requestAnimationFrame(() => {
-          const windowRect = this.window.getBoundingClientRect();
-          const contentHeight = windowRect.height;
-          const contentWidth = windowRect.width;
-          
-          // Calculate scale factors for both dimensions
-          const heightScale = Math.min(1, availableHeight / contentHeight);
-          const widthScale = Math.min(1, availableWidth / contentWidth);
-          
-          // Use the smaller scale factor to ensure everything fits
-          const scaleFactor = Math.min(heightScale, widthScale);
-          
-          if (scaleFactor < 1) {
-            this.window.style.transform = `scale(${scaleFactor})`;
-          }
-        });
         
         // Adjust text sizes for very small screens
         if (viewportWidth < 480) {
@@ -485,6 +456,49 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
     opacity: 0;
     transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     transform-origin: center center;
+    /* Ensure the window doesn't get too wide */
+    max-width: 90vw;
+    max-height: 90vh;
+    /* Force the window to be more compact on wide screens */
+    width: auto;
+    height: auto;
+    /* Use flexbox for header/content layout */
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header styling */
+  #theater-window > div:first-child {
+    flex-shrink: 0;
+  }
+
+  /* Scrollable content area */
+  #theater-window > div:last-child {
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Custom scrollbar styling */
+  #theater-window > div:last-child::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  #theater-window > div:last-child::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  #theater-window > div:last-child::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 3px;
+  }
+
+  #theater-window > div:last-child::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.5);
+  }
+
+  /* Video container styling */
+  #theater-video-container iframe {
+    border-radius: 8px;
   }
 
   /* Theater window open state */
@@ -493,9 +507,14 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
     opacity: 1;
   }
 
-  /* Video container styling */
-  #theater-video-container iframe {
-    border-radius: 8px;
+  /* Responsive video container for wide screens */
+  .aspect-video {
+    transition: max-height 0.3s ease-out;
+  }
+
+  /* Content container responsive adjustments */
+  .theater-content {
+    transition: padding 0.3s ease-out, gap 0.3s ease-out;
   }
 
   /* Responsive theater mode */

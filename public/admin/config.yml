@@ -82,7 +82,7 @@ collections:
     extension: "json"
     editor: { preview: false }
     fields:
-      - { label: "Name", name: "name", widget: "select", options: ["Editing","Motion Graphics","Visual Effects","Color","Sound Design","3D","AI","Visualizers"] }
+      - { label: "Name", name: "name", widget: "select", options: ["Editing","Motion Graphics","Visual Effects","Color","Sound Design","3D","AI","Visualizers","Music Production"] }
       - { label: "POV", name: "pov", widget: "text" }
       - label: "Highlights"
         name: "highlights"
