@@ -6,6 +6,7 @@ let about;
 try {
   const aboutCollection = await getCollection('about');
   about = aboutCollection[0]; // Get the first (and only) entry
+  console.log('About collection data:', about); // Debug logging
 } catch (error) {
   console.error('Error loading about collection:', error);
   about = null;
@@ -23,7 +24,7 @@ try {
             <img
               src={about?.data?.headshot || "https://i.imgur.com/3LwyDts.png"}
               alt="Whit Cooper"
-              class="w-48 h-48 md:w-64 md:h-64"
+              class="w-48 h-48 md:w-64 md:h-64 rounded-full object-cover"
             />
           </div>
           
