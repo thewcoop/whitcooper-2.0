@@ -194,4 +194,24 @@ const { Content } = await post.render();
     overflow-x: auto;
     margin: 2rem 0;
   }
+
+  /* Clean, responsive image styling for local uploads */
+  .prose img {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    margin: 2rem auto;
+    display: block;
+    max-width: 100%;
+  }
+
+  /* Ensure images are responsive */
+  .prose figure {
+    margin: 2rem 0;
+  }
+
+  .prose figure img {
+    margin: 0;
+  }
 </style>
