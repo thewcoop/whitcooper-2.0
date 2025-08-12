@@ -78,11 +78,12 @@ collections:
     label: "Skills"
     folder: "src/content/skills"
     create: true
-    slug: "{{slug}}"
+    slug: "{{name | slug}}"
     extension: "json"
     editor: { preview: false }
+    summary: "{{name}} - {{pov}}"
     fields:
-      - { label: "Name", name: "name", widget: "select", options: ["Editing","Motion Graphics","Visual Effects","Color","Sound Design","3D","AI","Visualizers","Music Production"] }
+      - { label: "Name", name: "name", widget: "string", hint: "Enter the skill name (e.g., Editing, Motion Graphics, etc.)" }
       - { label: "POV", name: "pov", widget: "text" }
       - label: "Highlights"
         name: "highlights"
