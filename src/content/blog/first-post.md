@@ -24,10 +24,10 @@ The first night was the afterparty for "Christmas in July," an extremely popular
 
 <br>
 
-We spent one more even-more-fun night here. They had some really good food, and it was really fun watching people pull up on their fancy boats. 
+We spent one more even-more-fun night here. They had some really good food, and it was really fun watching people pull up on their fancy boats. \
+<br>
 
-## \
-Cooper Island
+<h1>Cooper Island<h1>
 
 Obviously we (the Cooper family) HAD to go check out *our* island! In true Cooper fashion, this island is known for its Rum Bar, which supposedly has more rums than any other! A man can only drink so much :( but check out these awesome boardwalks.
 
