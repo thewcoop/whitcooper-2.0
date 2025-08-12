@@ -54,6 +54,27 @@ const { Content } = await post.render();
     <!-- Post Content -->
     <div class="post-content wc-card p-8 prose prose-invert prose-lg max-w-none">
       <Content />
+      
+      {/* Render inline images with captions */}
+      {post.data.inlineImages && post.data.inlineImages.length > 0 && (
+        <div class="inline-images mt-8 space-y-8">
+          {post.data.inlineImages.map((image, index) => (
+            <figure class="inline-image wc-card p-6 text-center">
+              <img 
+                src={image.url} 
+                alt={image.alt || image.caption || `Image ${index + 1}`}
+                class="w-full h-auto rounded-lg shadow-lg mx-auto"
+                loading="lazy"
+              />
+              {image.caption && (
+                <figcaption class="mt-4 text-sm text-neutral-400 italic">
+                  {image.caption}
+                </figcaption>
+              )}
+            </figure>
+          ))}
+        </div>
+      )}
     </div>
 
     <!-- Navigation Footer -->

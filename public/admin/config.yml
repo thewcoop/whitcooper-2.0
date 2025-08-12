@@ -14,7 +14,31 @@ collections:
       - { label: Date, name: date, widget: datetime }
       - { label: Summary, name: summary, widget: text, required: false }
       - { label: Cover Image, name: coverImage, widget: image, required: false }
-      - { label: Body, name: body, widget: markdown }
+      - { 
+          label: Body, 
+          name: body, 
+          widget: markdown,
+          buttons: [
+            "bold",
+            "italic",
+            "code",
+            "link",
+            "heading-one",
+            "heading-two", 
+            "heading-three",
+            "quote",
+            "bulleted-list",
+            "numbered-list"
+          ]
+        }
+      - label: Inline Images
+        name: inlineImages
+        widget: list
+        required: false
+        fields:
+          - { label: Image URL, name: url, widget: string, hint: "Paste Imgur or other image URL here" }
+          - { label: Caption, name: caption, widget: string, required: false, hint: "Optional caption for the image" }
+          - { label: Alt Text, name: alt, widget: string, required: false, hint: "Description for accessibility" }
   - name: portfolio
     label: Portfolio
     folder: src/content/portfolio
