@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { getEntryBySlug } from 'astro:content';
-const about = await getEntryBySlug('pages', 'about');
+const about = await getEntryBySlug('about', 'index');
 ---
 <Layout title="About">
   <section class="max-w-4xl mx-auto py-16 px-6">
@@ -22,15 +22,13 @@ const about = await getEntryBySlug('pages', 'about');
           <!-- Profile Info -->
           <div class="flex-1 text-center md:text-left">
             <h2 class="text-3xl font-bold mb-4 text-gradient">
-              Whit Cooper
+              {about?.data?.title || "Whit Cooper"}
             </h2>
             <p class="text-xl text-neutral-300 mb-4">
-              Creative Video Editor & Motion Designer
+              {about?.data?.subtitle || "Creative Video Editor & Motion Designer"}
             </p>
             <p class="text-lg text-neutral-400 leading-relaxed">
-              Hi! I'm a Dallas-based creative professional who transforms raw footage into compelling stories. 
-              With expertise in editing, motion graphics, VFX, and color grading, I bring ideas to life through 
-              visual storytelling that actually sticks.
+              {about?.data?.description || "Hi! I'm a Dallas-based creative professional who transforms raw footage into compelling stories. With expertise in editing, motion graphics, VFX, and color grading, I bring ideas to life through visual storytelling that actually sticks."}
             </p>
           </div>
         </div>

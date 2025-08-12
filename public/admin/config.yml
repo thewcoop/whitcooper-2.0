@@ -89,3 +89,17 @@ collections:
         widget: "list"
         fields: [{ label: "Item", name: "item", widget: "string" }]
 
+  - name: "about"
+    label: "About"
+    folder: "src/content/about"
+    create: false
+    slug: "index"
+    extension: "json"
+    editor: { preview: false }
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Subtitle", name: "subtitle", widget: "string" }
+      - { label: "Description", name: "description", widget: "text" }
+      - { label: "Headshot", name: "headshot", widget: "image", required: false }
+      - { label: "Additional Content", name: "additionalContent", widget: "markdown", required: false }
+
