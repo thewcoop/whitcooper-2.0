@@ -1,7 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getEntryBySlug } from 'astro:content';
-const about = await getEntryBySlug('about', 'index');
+import { getCollection } from 'astro:content';
+
+let about;
+try {
+  const aboutCollection = await getCollection('about');
+  about = aboutCollection[0]; // Get the first (and only) entry
+} catch (error) {
+  console.error('Error loading about collection:', error);
+  about = null;
+}
 ---
 <Layout title="About">
   <section class="max-w-4xl mx-auto py-16 px-6">
