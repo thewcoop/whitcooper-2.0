@@ -8,8 +8,16 @@ const items = [
   { href: '/contact', label: 'Contact' },
 ];
 
-// Get current path for active state
-const currentPath = Astro.url.pathname;
+// Get current path for active state and normalize it
+const currentPath = Astro.url.pathname.replace(/\/$/, ''); // Remove trailing slash
+
+// Helper function to check if a path is active
+function isPathActive(href: string, currentPath: string): boolean {
+  if (href === '/') {
+    return currentPath === '' || currentPath === '/';
+  }
+  return currentPath === href || currentPath.startsWith(href + '/');
+}
 ---
 <nav class="w-full flex flex-col items-center gap-4 py-8 pt-10">
   <a href="/" class="block group">
@@ -22,7 +30,7 @@ const currentPath = Astro.url.pathname;
   
   <div class="relative flex items-center gap-8">
     {items.map(({href, label}) => {
-      const isActive = currentPath === href;
+      const isActive = isPathActive(href, currentPath);
       return (
         <a 
           href={href} 
