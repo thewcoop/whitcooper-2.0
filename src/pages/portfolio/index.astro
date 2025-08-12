@@ -63,7 +63,7 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
                 {data.title}
               </h3>
               {data.description && (
-                <p class="text-sm text-neutral-300 leading-relaxed">
+                <p class="text-sm text-neutral-300 leading-relaxed line-clamp-2">
                   {data.description}
                 </p>
               )}
@@ -236,6 +236,10 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
         // Get viewport dimensions
         const viewportHeight = window.innerHeight;
         const viewportWidth = window.innerWidth;
+        
+        // Calculate available space (accounting for padding and margins)
+        const availableHeight = viewportHeight * 0.9; // 90% of viewport height
+        const availableWidth = Math.min(viewportWidth * 0.81, 720); // 81% of viewport width, max 720px (reduced from 800px by 10%)
         
         // Adjust text sizes for very small screens
         if (viewportWidth < 480) {
@@ -457,7 +461,7 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
     transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     transform-origin: center center;
     /* Ensure the window doesn't get too wide */
-    max-width: 90vw;
+    max-width: 81vw; /* Reduced from 90vw by 10% */
     max-height: 90vh;
     /* Force the window to be more compact on wide screens */
     width: auto;
@@ -709,5 +713,14 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Text truncation for portfolio cards */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>
