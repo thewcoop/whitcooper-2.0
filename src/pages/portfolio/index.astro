@@ -32,10 +32,16 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
     <!-- Portfolio Grid -->
     <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3" id="portfolio-grid">
       {projects.map(({ data }, index) => (
-        <div class="portfolio-card wc-card p-6 group cursor-pointer transition-all duration-500 hover:scale-[1.02]" data-tags={data.tags.join(',')} data-index={index}>
+        <div class="portfolio-card wc-card p-6 group cursor-pointer transition-all duration-500 hover:scale-[1.02]" 
+             data-tags={data.tags.join(',')} 
+             data-index={index}
+             data-title={data.title}
+             data-description={data.description}
+             data-video={data.videoURL}
+             data-thumbnail={data.thumbnail}>
           <div class="space-y-4">
             <!-- Video Thumbnail -->
-            <div class="relative aspect-video cursor-pointer group/video overflow-hidden rounded-lg" data-video={data.videoURL}>
+            <div class="relative aspect-video cursor-pointer group/video overflow-hidden rounded-lg">
               {data.thumbnail && (
                 <img
                   src={data.thumbnail}
@@ -84,7 +90,262 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
     )}
   </section>
 
+  <!-- Theater Mode Overlay -->
+  <div id="theater-overlay" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-md transition-all duration-700 ease-out" id="theater-backdrop"></div>
+    
+    <!-- Theater Window -->
+    <div class="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+      <div id="theater-window" class="wc-card w-full max-w-6xl max-h-[90vh] overflow-hidden transform scale-75 opacity-0 transition-all duration-700 ease-out">
+        <!-- Header with close button -->
+        <div class="flex items-center justify-between p-4 sm:p-6">
+          <h2 id="theater-title" class="text-xl sm:text-2xl font-bold text-gradient pr-4"></h2>
+          <button id="theater-close" class="group p-2 hover:bg-white/10 rounded-full transition-all duration-300 flex-shrink-0">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white/70 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Content -->
+        <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
+          <!-- Video Container -->
+          <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
+            <div id="theater-video-container" class="w-full h-full"></div>
+          </div>
+          
+          <!-- Project Info -->
+          <div class="space-y-4">
+            <p id="theater-description" class="text-base sm:text-lg text-neutral-200 leading-relaxed"></p>
+            <div id="theater-tags" class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // --- Theater Mode Implementation ---
+    class TheaterMode {
+      constructor() {
+        this.overlay = document.getElementById('theater-overlay');
+        this.window = document.getElementById('theater-window');
+        this.backdrop = document.getElementById('theater-backdrop');
+        this.title = document.getElementById('theater-title');
+        this.description = document.getElementById('theater-description');
+        this.tags = document.getElementById('theater-tags');
+        this.videoContainer = document.getElementById('theater-video-container');
+        this.closeBtn = document.getElementById('theater-close');
+        this.isOpen = false;
+        this.currentVideo = null;
+        
+        this.init();
+      }
+      
+      init() {
+        // Close button click
+        this.closeBtn.addEventListener('click', () => this.close());
+        
+        // ESC key
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && this.isOpen) {
+            this.close();
+          }
+        });
+        
+        // Backdrop click
+        this.backdrop.addEventListener('click', () => this.close());
+        
+        // Prevent window clicks from closing
+        this.window.addEventListener('click', (e) => e.stopPropagation());
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+          if (this.isOpen) {
+            this.adjustContentSizing();
+          }
+        });
+      }
+      
+      open(projectData) {
+        if (this.isOpen) return;
+        
+        this.currentVideo = projectData;
+        this.isOpen = true;
+        
+        // Set content
+        this.title.textContent = projectData.title;
+        this.description.textContent = projectData.description || '';
+        
+        // Set tags
+        this.tags.innerHTML = '';
+        if (projectData.tags && projectData.tags.length > 0) {
+          projectData.tags.forEach(tag => {
+            const tagSpan = document.createElement('span');
+            tagSpan.className = 'px-3 py-1 text-xs bg-white/10 border border-white/20 rounded-full text-neutral-300';
+            tagSpan.textContent = tag;
+            this.tags.appendChild(tagSpan);
+          });
+        }
+        
+        // Create video embed
+        this.createVideoEmbed(projectData.videoURL);
+        
+        // Show overlay
+        this.overlay.classList.remove('hidden');
+        
+        // Animate in with smoother timing
+        requestAnimationFrame(() => {
+          this.backdrop.style.opacity = '1';
+          this.backdrop.style.backdropFilter = 'blur(8px)';
+          this.window.style.transform = 'scale(1)';
+          this.window.style.opacity = '1';
+        });
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+        
+        // Adjust content sizing to fit viewport
+        this.adjustContentSizing();
+      }
+      
+      close() {
+        if (!this.isOpen) return;
+        
+        this.isOpen = false;
+        
+        // Animate out with smoother timing
+        this.backdrop.style.opacity = '0';
+        this.backdrop.style.backdropFilter = 'blur(0px)';
+        this.window.style.transform = 'scale(0.75) translateY(20px)';
+        this.window.style.opacity = '0';
+        
+        // Hide overlay after animation completes
+        setTimeout(() => {
+          this.overlay.classList.add('hidden');
+          this.clearVideo();
+          document.body.style.overflow = '';
+          
+          // Reset backdrop filter for next open
+          this.backdrop.style.backdropFilter = 'blur(8px)';
+        }, 700);
+      }
+      
+      adjustContentSizing() {
+        // Get viewport dimensions
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // Calculate available space (accounting for padding and margins)
+        const availableHeight = viewportHeight * 0.9; // 90% of viewport height
+        const availableWidth = Math.min(viewportWidth * 0.95, 1200); // 95% of viewport width, max 1200px
+        
+        // Set theater window dimensions
+        this.window.style.maxWidth = `${availableWidth}px`;
+        this.window.style.maxHeight = `${availableHeight}px`;
+        
+        // Use CSS transform scale to fit content if needed
+        this.window.style.transform = 'scale(1)';
+        
+        // Wait for next frame to measure actual content size
+        requestAnimationFrame(() => {
+          const windowRect = this.window.getBoundingClientRect();
+          const contentHeight = windowRect.height;
+          const contentWidth = windowRect.width;
+          
+          // Calculate scale factors for both dimensions
+          const heightScale = Math.min(1, availableHeight / contentHeight);
+          const widthScale = Math.min(1, availableWidth / contentWidth);
+          
+          // Use the smaller scale factor to ensure everything fits
+          const scaleFactor = Math.min(heightScale, widthScale);
+          
+          if (scaleFactor < 1) {
+            this.window.style.transform = `scale(${scaleFactor})`;
+          }
+        });
+        
+        // Adjust text sizes for very small screens
+        if (viewportWidth < 480) {
+          this.title.style.fontSize = '1rem';
+          this.description.style.fontSize = '0.85rem';
+        } else if (viewportWidth < 768) {
+          this.title.style.fontSize = '1.25rem';
+          this.description.style.fontSize = '0.95rem';
+        } else {
+          this.title.style.fontSize = '1.5rem';
+          this.description.style.fontSize = '1.125rem';
+        }
+      }
+      
+      createVideoEmbed(videoURL) {
+        this.clearVideo();
+        
+        const embedURL = this.toEmbedURL(videoURL);
+        if (!embedURL) return;
+        
+        const iframe = document.createElement('iframe');
+        iframe.src = embedURL;
+        iframe.className = 'w-full h-full';
+        iframe.loading = 'lazy';
+        iframe.allow = 'autoplay; fullscreen; picture-in-picture; clipboard-write';
+        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+        iframe.setAttribute('allowfullscreen', '');
+        
+        this.videoContainer.appendChild(iframe);
+      }
+      
+      clearVideo() {
+        this.videoContainer.innerHTML = '';
+      }
+      
+      toEmbedURL(raw) {
+        if (!raw) return '';
+
+        // YouTube — handle watch, short, and embed URLs
+        if (/youtu\.?be/.test(raw)) {
+          const idMatch =
+            raw.match(/[?&]v=([^&]+)/) ||            // https://www.youtube.com/watch?v=ID
+            raw.match(/youtu\.be\/([^?&/]+)/) ||     // https://youtu.be/ID
+            raw.match(/embed\/([^&]+)/);           // https://www.youtube.com/embed/ID
+          const id = idMatch?.[1];
+          return id ? `https://www.youtube.com/embed/${id}` : raw;
+        }
+
+        // Vimeo — convert to player URL
+        if (/vimeo\.com/.test(raw)) {
+          const idMatch = raw.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+          const id = idMatch?.[1];
+          // dnt=1 (Do Not Track), hide chrome for a cleaner look
+          return id
+            ? `https://player.vimeo.com/video/${id}?dnt=1&title=0&byline=0&portrait=0`
+            : raw;
+        }
+
+        // Fallback: assume it's already an embed or another provider
+        return raw;
+      }
+    }
+
+    // Initialize theater mode
+    const theater = new TheaterMode();
+
+    // --- Portfolio Card Click Handlers ---
+    document.querySelectorAll('.portfolio-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const projectData = {
+          title: card.dataset.title,
+          description: card.dataset.description,
+          videoURL: card.dataset.video,
+          thumbnail: card.dataset.thumbnail,
+          tags: card.dataset.tags.split(',').map(t => t.trim()).filter(Boolean)
+        };
+        
+        theater.open(projectData);
+      });
+    });
+
     // --- Helpers ---
     function toEmbedURL(raw) {
       if (!raw) return '';
@@ -164,29 +425,6 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
 
     updateButtonStates();
     filterItems();
-
-    // --- Video click-to-embed (Vimeo/YouTube safe) ---
-    document.querySelectorAll('[data-video]').forEach(el => {
-      const raw = el.dataset.video;
-      const src = toEmbedURL(raw);
-
-      el.addEventListener('click', () => {
-        const iframe = document.createElement('iframe');
-        iframe.src = src;
-        iframe.className = 'w-full h-full';
-        iframe.loading = 'lazy';
-        iframe.allow = 'autoplay; fullscreen; picture-in-picture; clipboard-write';
-        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-        iframe.setAttribute('allowfullscreen', '');
-
-        // Replace the thumbnail/overlay with the embed
-        el.innerHTML = '';
-        const wrapper = document.createElement('div');
-        wrapper.className = 'absolute inset-0';
-        wrapper.appendChild(iframe);
-        el.appendChild(wrapper);
-      });
-    });
   </script>
 </Layout>
 
@@ -205,6 +443,103 @@ const tags = ['All','Editing','Motion Graphics','VFX','Color','Sound Design'];
   .wc-card:hover {
     border-color: rgba(255,255,255,0.2);
     box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.08) inset;
+  }
+
+  /* Theater Mode Styles */
+  #theater-overlay {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  #theater-window {
+    box-shadow: 0 25px 100px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.1) inset;
+    border: 1px solid rgba(255,255,255,0.15);
+    /* Ensure content fits without scrolling */
+    display: flex;
+    flex-direction: column;
+    /* Prevent content overflow */
+    overflow: hidden;
+  }
+
+  #theater-close {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  #theater-close:hover {
+    background: rgba(255,255,255,0.15);
+    transform: scale(1.1);
+  }
+
+  /* Theater backdrop animation */
+  #theater-backdrop {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Theater window animation */
+  #theater-window {
+    transform: scale(0.75) translateY(20px);
+    opacity: 0;
+    transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform-origin: center center;
+  }
+
+  /* Theater window open state */
+  #theater-window.open {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+
+  /* Video container styling */
+  #theater-video-container iframe {
+    border-radius: 8px;
+  }
+
+  /* Responsive theater mode */
+  @media (max-width: 768px) {
+    #theater-window {
+      max-width: 95vw;
+      margin: 0.5rem;
+      max-height: 95vh;
+    }
+    
+    #theater-title {
+      font-size: 1.25rem;
+      line-height: 1.3;
+    }
+    
+    #theater-description {
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    #theater-tags {
+      gap: 0.5rem;
+    }
+
+    #theater-tags span {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    #theater-window {
+      max-width: 98vw;
+      margin: 0.25rem;
+      max-height: 98vh;
+    }
+    
+    #theater-title {
+      font-size: 1.1rem;
+    }
+    
+    #theater-description {
+      font-size: 0.9rem;
+    }
   }
 
   /* Filter button specific styling */

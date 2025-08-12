@@ -20,18 +20,33 @@ const sortedPosts = posts.sort((a, b) => new Date(b.data.date).getTime() - new D
     <div class="space-y-8">
       {sortedPosts.map((post, index) => (
         <a href={`/blog/${post.slug}/`} class="block">
-          <article class="blog-card wc-card p-8 group cursor-pointer transition-all duration-500 hover:scale-[1.02]" data-index={index}>
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div class="flex-1">
-                <h2 class="text-2xl font-semibold mb-3 group-hover:text-orange-400 transition-colors duration-300">
+          <article class="blog-card wc-card p-6 group cursor-pointer transition-all duration-500 hover:scale-[1.02]" data-index={index}>
+            <div class="flex gap-6">
+              {/* Thumbnail Image */}
+              {post.data.coverImage && (
+                <div class="flex-shrink-0">
+                  <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-black/20">
+                    <img 
+                      src={post.data.coverImage} 
+                      alt={post.data.title}
+                      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* Content */}
+              <div class="flex-1 min-w-0">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-3 group-hover:text-orange-400 transition-colors duration-300 leading-tight">
                   {post.data.title}
                 </h2>
                 {post.data.summary && (
-                  <p class="text-neutral-300 mb-4 leading-relaxed">
+                  <p class="text-sm sm:text-base text-neutral-300 mb-4 leading-relaxed">
                     {post.data.summary}
                   </p>
                 )}
-                <div class="flex items-center gap-4 text-sm text-neutral-400">
+                <div class="flex items-center gap-2 text-sm text-neutral-400">
                   <time datetime={post.data.date} class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
@@ -42,12 +57,6 @@ const sortedPosts = posts.sort((a, b) => new Date(b.data.date).getTime() - new D
                       day: 'numeric'
                     })}
                   </time>
-                  <span class="flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
-                    </svg>
-                    Read more
-                  </span>
                 </div>
               </div>
             </div>
@@ -102,6 +111,44 @@ const sortedPosts = posts.sort((a, b) => new Date(b.data.date).getTime() - new D
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  /* Blog post layout improvements */
+  .blog-card .flex {
+    align-items: flex-start;
+  }
+
+  /* Ensure text wraps properly */
+  .blog-card h2 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  .blog-card p {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Thumbnail image styling */
+  .blog-card img {
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .blog-card:hover img {
+    transform: scale(1.1);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 640px) {
+    .blog-card .flex {
+      gap: 1rem;
+    }
+    
+    .blog-card .w-20.h-20.sm\\:w-24.sm\\:h-24 {
+      width: 4rem;
+      height: 4rem;
     }
   }
 
