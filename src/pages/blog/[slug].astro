@@ -214,4 +214,24 @@ const { Content } = await post.render();
   .prose figure img {
     margin: 0;
   }
+
+  /* Override Tailwind prose spacing with CSS custom properties */
+  .prose {
+    --tw-prose-spacing: 2rem;
+    --tw-prose-vertical-spacing: 2rem;
+  }
+
+  /* Force more spacing between prose elements */
+  .prose > * + * {
+    margin-top: 2rem;
+  }
+
+  /* Extra spacing for images */
+  .prose > * + img {
+    margin-top: 3rem;
+  }
+
+  .prose > img + * {
+    margin-top: 3rem;
+  }
 </style>
