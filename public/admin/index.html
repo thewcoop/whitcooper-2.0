@@ -18,8 +18,10 @@
 
     <style>
       /* ─────────────────────────────────────────────
-         Dark editor shell — matches whitcooper.com
-         bg: #0a0a0a  |  fg: #fafafa
+         Minimal editor overrides — only target elements
+         where we also control the background. Setting
+         color globally would cascade into the CMS's own
+         white panels and make text invisible.
          ───────────────────────────────────────────── */
 
       *, *::before, *::after { box-sizing: border-box; }
@@ -27,71 +29,49 @@
       html, body {
         margin: 0;
         padding: 0;
+        /* Background only — no color, which would cascade
+           into CMS panels and create white-on-white text */
         background: #0a0a0a;
-        color: #fafafa;
         font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-font-smoothing: antialiased;
         min-height: 100vh;
       }
 
-      /* ── Text inputs and textareas ── */
+      /* ── Single-line text inputs (Title, Video URL, etc.) ──
+         We set both background AND color here so they work together. */
       input[type="text"],
       input[type="url"],
       input[type="email"],
       input[type="search"],
       input[type="datetime-local"],
-      input[type="date"],
-      textarea {
-        background: rgba(255, 255, 255, 0.07) !important;
-        color: #fafafa !important;
-        border: 1px solid rgba(255, 255, 255, 0.14) !important;
-        border-radius: 8px !important;
+      input[type="date"] {
+        background: #1c1c1c !important;
+        color: #f0f0f0 !important;
+        border: 1px solid #3a3a3a !important;
+        border-radius: 6px !important;
         font-family: 'Atkinson Hyperlegible', sans-serif !important;
-        font-size: 0.95rem !important;
-        transition: border-color 0.2s, box-shadow 0.2s !important;
       }
 
-      input:focus,
-      textarea:focus {
-        border-color: rgba(255, 255, 255, 0.35) !important;
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06) !important;
+      input[type="text"]:focus,
+      input[type="url"]:focus,
+      input[type="email"]:focus,
+      input[type="search"]:focus,
+      input[type="datetime-local"]:focus,
+      input[type="date"]:focus {
+        border-color: #666 !important;
         outline: none !important;
       }
 
-      input::placeholder,
-      textarea::placeholder {
+      input[type="text"]::placeholder,
+      input[type="url"]::placeholder {
         color: #555 !important;
-      }
-
-      /* ── Select / dropdown ── */
-      select {
-        background: #161616 !important;
-        color: #fafafa !important;
-        border: 1px solid rgba(255, 255, 255, 0.14) !important;
-        border-radius: 8px !important;
-        font-family: 'Atkinson Hyperlegible', sans-serif !important;
-      }
-
-      select option {
-        background: #1a1a1a !important;
-        color: #fafafa !important;
-      }
-
-      /* ── Rich text / markdown editor content area ── */
-      [data-slate-editor],
-      [contenteditable="true"] {
-        color: #e5e5e5 !important;
-        font-family: 'Atkinson Hyperlegible', sans-serif !important;
-        font-size: 1rem !important;
-        line-height: 1.75 !important;
-        caret-color: #fafafa !important;
       }
 
       /* ── Scrollbars ── */
       ::-webkit-scrollbar            { width: 6px; height: 6px; }
       ::-webkit-scrollbar-track      { background: transparent; }
-      ::-webkit-scrollbar-thumb      { background: rgba(255,255,255,0.15); border-radius: 99px; }
-      ::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,0.28); }
+      ::-webkit-scrollbar-thumb      { background: rgba(0,0,0,0.25); border-radius: 99px; }
+      ::-webkit-scrollbar-thumb:hover{ background: rgba(0,0,0,0.4); }
     </style>
   </head>
 
