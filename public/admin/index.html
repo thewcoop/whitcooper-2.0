@@ -228,9 +228,11 @@
           );
         },
 
-        toPreview: function (obj) {
-          var src = obj.src || '', alt = obj.alt || obj.caption || '', cap = obj.caption || '';
-          var align = obj.align || 'center', size = obj.size || 'full', aspect = obj.aspect || 'natural';
+        toPreview: function (obj, getAsset) {
+          var rawSrc = obj.src || '';
+          var src    = rawSrc ? (getAsset ? String(getAsset(rawSrc)) : rawSrc) : '';
+          var alt    = obj.alt || obj.caption || '', cap = obj.caption || '';
+          var align  = obj.align  || 'center', size = obj.size || 'full', aspect = obj.aspect || 'natural';
           var sizeMap   = { full: '100%', large: '70%', medium: '50%', small: '33%' };
           var aspectMap = { natural: 'unset', square: '1/1', landscape: '16/9', portrait: '3/4' };
           var width = sizeMap[size] || '100%', ratio = aspectMap[aspect] || 'unset';
@@ -241,7 +243,10 @@
           if (ratio !== 'unset') imgStyle += 'aspect-ratio:' + ratio + ';object-fit:cover;';
           return (
             '<figure style="' + figStyle + '">' +
-            '<img src="' + src + '" alt="' + alt + '" style="' + imgStyle + '" />' +
+            (src
+              ? '<img src="' + src + '" alt="' + alt + '" style="' + imgStyle + '" />'
+              : '<div style="' + imgStyle + 'background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;border-radius:10px;color:#555;font-size:0.8rem;">No photo selected</div>'
+            ) +
             (cap ? '<figcaption style="text-align:center;font-size:0.8rem;color:#888;font-style:italic;margin-top:0.4rem;">' + cap + '</figcaption>' : '') +
             '</figure>'
           );
@@ -324,18 +329,24 @@
           return '<div class="cms-photo-row" data-cols="' + cols + '" data-aspect="' + aspect + '">\n' + rows + '</div>';
         },
 
-        toPreview: function (obj) {
+        toPreview: function (obj, getAsset) {
           var cols = parseInt(obj.cols || '2', 10), aspect = obj.aspect || 'landscape';
           var aspectMap = { landscape: '16/9', square: '1/1', portrait: '3/4', natural: 'unset' };
           var ratio = aspectMap[aspect] || '16/9';
           var imgStyle = 'width:100%;height:auto;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,0.3);display:block;margin:0;';
           if (ratio !== 'unset') imgStyle += 'aspect-ratio:' + ratio + ';object-fit:cover;';
+          var placeholderStyle = imgStyle + 'background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;color:#555;font-size:0.75rem;';
           var photos = '';
           for (var i = 1; i <= cols; i++) {
-            var src = obj['img' + i] || '', cap = obj['cap' + i] || '';
-            if (!src) continue;
-            photos += '<figure style="margin:0;"><img src="' + src + '" alt="' + cap + '" style="' + imgStyle + '" />' +
-                      (cap ? '<figcaption style="text-align:center;font-size:0.75rem;color:#888;font-style:italic;margin-top:0.35rem;">' + cap + '</figcaption>' : '') + '</figure>';
+            var rawSrc = obj['img' + i] || '', cap = obj['cap' + i] || '';
+            var src = rawSrc ? (getAsset ? String(getAsset(rawSrc)) : rawSrc) : '';
+            photos += '<figure style="margin:0;">' +
+              (src
+                ? '<img src="' + src + '" alt="' + cap + '" style="' + imgStyle + '" />'
+                : '<div style="' + placeholderStyle + '">Photo ' + i + '</div>'
+              ) +
+              (cap ? '<figcaption style="text-align:center;font-size:0.75rem;color:#888;font-style:italic;margin-top:0.35rem;">' + cap + '</figcaption>' : '') +
+              '</figure>';
           }
           return '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:0.75rem;margin:1.5rem 0;clear:both;">' + photos + '</div>';
         },

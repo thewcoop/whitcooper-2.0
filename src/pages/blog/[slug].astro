@@ -22,6 +22,13 @@ const { Content } = await post.render();
       </a>
     </div>
 
+    <!-- Cover Image -->
+    {post.data.coverImage && (
+      <div class="cover-wrap mb-4">
+        <img src={post.data.coverImage} alt={post.data.title} class="cover-img" />
+      </div>
+    )}
+
     <!-- Post Header -->
     <header class="post-header wc-card p-8 mb-12">
       <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gradient leading-tight mb-6">
@@ -88,6 +95,22 @@ const { Content } = await post.render();
 </Layout>
 
 <style>
+  /* Cover image */
+  .cover-wrap {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  }
+
+  .cover-img {
+    width: 100%;
+    height: auto;
+    max-height: 420px;
+    object-fit: cover;
+    display: block;
+  }
+
   /* Glass card styles matching the blog index */
   .wc-card {
     background: rgba(255,255,255,0.06);
