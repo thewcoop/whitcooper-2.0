@@ -22,7 +22,6 @@ collections:
           - bold
           - italic
           - link
-          - image
           - heading-one
           - heading-two
           - heading-three
