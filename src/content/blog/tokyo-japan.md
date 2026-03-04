@@ -7,6 +7,17 @@ summary: |-
 coverImage: /uploads/dscf4520_instagram-post_1080x1350_u_110_p3_gainmap.jpg
 inlineImages: []
 ---
-
-
 ![Random street near Nakano Broadway, a large shopping building.](/uploads/dscf4589_instagram-post_1080x1350_u_110_p3_gainmap.jpg "Nakano")
+
+A cool street detail not far from Nakano Broadway. Right nearby Tototo Pizza.
+
+
+
+<div class="cms-photo-row" data-cols="2" data-aspect="landscape">
+  <figure>
+    <img src="/uploads/dscf4593_instagram-post_1080x1350_u_110_p3_gainmap.jpg" alt="" loading="lazy" />
+  </figure>
+  <figure>
+    <img src="/uploads/dscf4285_instagram-post_1080x1350_u_110_p3_gainmap.jpg" alt="" loading="lazy" />
+  </figure>
+</div>
