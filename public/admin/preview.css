@@ -1,0 +1,276 @@
+/* ─────────────────────────────────────────────
+   Decap CMS Blog Preview — matches whitcooper.com
+   ───────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+/* ── Reset & base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background: #0a0a0a;
+  color: #fafafa;
+  font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* ── Preview shell ── */
+.preview-root {
+  min-height: 100vh;
+  background: #0a0a0a;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.preview-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* ── Empty state ── */
+.preview-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: #444;
+  font-size: 0.9rem;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* ── Glass card — matches .wc-card ── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 16px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Cover image ── */
+.cover-wrap {
+  margin-bottom: 1.25rem;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.cover-img {
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Post header card ── */
+.post-header {
+  padding: 1.75rem 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.post-title {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+  /* text-gradient matching the site */
+  background: linear-gradient(135deg, #fafafa 0%, #a1a1aa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.post-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.post-date {
+  font-size: 0.82rem;
+  color: #71717a;
+  letter-spacing: 0.03em;
+}
+
+.post-summary {
+  font-size: 0.95rem;
+  color: #a1a1aa;
+  font-style: italic;
+  line-height: 1.65;
+  margin-top: 0.5rem;
+}
+
+/* ── Post body card ── */
+.post-body {
+  padding: 2rem;
+}
+
+/* ── Prose typography — mirrors [slug].astro styles ── */
+.post-body h1,
+.post-body h2,
+.post-body h3,
+.post-body h4,
+.post-body h5,
+.post-body h6 {
+  font-family: 'Inter', sans-serif;
+  color: #fafafa;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  margin: 2rem 0 0.75rem;
+}
+
+.post-body h1 { font-size: 1.875rem; }
+.post-body h2 { font-size: 1.5rem; }
+.post-body h3 { font-size: 1.25rem; }
+.post-body h4 { font-size: 1.05rem; }
+
+.post-body p {
+  color: #e5e5e5;
+  line-height: 1.75;
+  margin-bottom: 1.5rem;
+}
+
+.post-body a {
+  color: #fbbf24;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.post-body a:hover {
+  border-bottom-color: #fbbf24;
+}
+
+.post-body strong,
+.post-body b {
+  font-family: 'Inter', sans-serif;
+  color: #fafafa;
+  font-weight: 600;
+}
+
+.post-body em {
+  color: #d4d4d8;
+}
+
+.post-body ul,
+.post-body ol {
+  color: #e5e5e5;
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.post-body li {
+  margin-bottom: 0.4rem;
+  line-height: 1.7;
+}
+
+.post-body blockquote {
+  border-left: 4px solid #fbbf24;
+  padding: 0.5rem 0 0.5rem 1.5rem;
+  margin: 2rem 0;
+  font-style: italic;
+  color: #a1a1aa;
+}
+
+.post-body code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.875em;
+  font-family: 'Fira Code', 'Fira Mono', 'Courier New', monospace;
+  color: #fbbf24;
+}
+
+.post-body pre {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 1.25rem 1.5rem;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 2rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.post-body pre code {
+  background: none;
+  padding: 0;
+  color: #e5e5e5;
+  font-size: 0.9rem;
+}
+
+.post-body hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin: 2.5rem 0;
+}
+
+.post-body img {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  margin: 2rem auto;
+  display: block;
+}
+
+.post-body figure {
+  margin: 2rem 0;
+}
+
+.post-body figure img {
+  margin: 0;
+}
+
+.post-body figcaption {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #71717a;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+.post-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.post-body th,
+.post-body td {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.5rem 0.85rem;
+  text-align: left;
+}
+
+.post-body th {
+  background: rgba(255, 255, 255, 0.08);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+/* ── Empty body placeholder ── */
+.body-placeholder {
+  color: #444;
+  font-style: italic;
+  text-align: center;
+  padding: 3rem 0;
+}

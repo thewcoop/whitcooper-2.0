@@ -31,14 +31,31 @@ collections:
             "numbered-list"
           ]
         }
-      - label: Inline Images
-        name: inlineImages
+      - label: Photo Layouts
+        name: imageGroups
         widget: list
         required: false
+        summary: "{{fields.layout}} — {{fields.images}} images"
+        hint: "Add groups of photos here. Each group can be displayed as 1, 2, 3, or 4 columns side by side."
         fields:
-          - { label: Image URL, name: url, widget: string, hint: "Paste Imgur or other image URL here" }
-          - { label: Caption, name: caption, widget: string, required: false, hint: "Optional caption for the image" }
-          - { label: Alt Text, name: alt, widget: string, required: false, hint: "Description for accessibility" }
+          - label: Layout
+            name: layout
+            widget: select
+            default: full
+            hint: "How many columns to show photos side by side"
+            options:
+              - { label: "Full Width (1 photo)", value: "full" }
+              - { label: "Side by Side (2 photos)", value: "two-up" }
+              - { label: "3 Columns (3 photos)", value: "three-up" }
+              - { label: "4 Columns (4 photos)", value: "four-up" }
+          - label: Photos
+            name: images
+            widget: list
+            hint: "Upload photos for this group"
+            fields:
+              - { label: Photo, name: image, widget: image }
+              - { label: Caption, name: caption, widget: string, required: false, hint: "Optional caption shown below the photo" }
+              - { label: Alt Text, name: alt, widget: string, required: false, hint: "Describe the photo for accessibility" }
   - name: portfolio
     label: Portfolio
     folder: src/content/portfolio

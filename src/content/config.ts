@@ -13,6 +13,14 @@ const blog = defineCollection({
       caption: z.string().optional(),
       alt: z.string().optional(),
     })).optional(),
+    imageGroups: z.array(z.object({
+      layout: z.enum(['full', 'two-up', 'three-up', 'four-up']).default('full'),
+      images: z.array(z.object({
+        image: z.string(),
+        caption: z.string().optional(),
+        alt: z.string().optional(),
+      })),
+    })).optional(),
   }),
 });
 

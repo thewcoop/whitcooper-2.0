@@ -55,23 +55,24 @@ const { Content } = await post.render();
     <div class="post-content wc-card p-8 prose prose-invert prose-lg max-w-none">
       <Content />
       
-      {/* Render inline images with captions */}
-      {post.data.inlineImages && post.data.inlineImages.length > 0 && (
-        <div class="inline-images mt-8 space-y-8">
-          {post.data.inlineImages.map((image, index) => (
-            <figure class="inline-image wc-card p-6 text-center">
-              <img 
-                src={image.url} 
-                alt={image.alt || image.caption || `Image ${index + 1}`}
-                class="w-full h-auto rounded-lg shadow-lg mx-auto"
-                loading="lazy"
-              />
-              {image.caption && (
-                <figcaption class="mt-4 text-sm text-neutral-400 italic">
-                  {image.caption}
-                </figcaption>
-              )}
-            </figure>
+      {/* Render photo layout groups */}
+      {post.data.imageGroups && post.data.imageGroups.length > 0 && (
+        <div class="image-groups mt-8 space-y-8">
+          {post.data.imageGroups.map((group, groupIndex) => (
+            <div class={`image-group layout-${group.layout}`}>
+              {group.images.map((item, imageIndex) => (
+                <figure class="image-item">
+                  <img
+                    src={item.image}
+                    alt={item.alt || item.caption || `Photo ${imageIndex + 1}`}
+                    loading="lazy"
+                  />
+                  {item.caption && (
+                    <figcaption>{item.caption}</figcaption>
+                  )}
+                </figure>
+              ))}
+            </div>
           ))}
         </div>
       )}
@@ -233,5 +234,66 @@ const { Content } = await post.render();
 
   .prose > img + * {
     margin-top: 3rem;
+  }
+
+  /* Photo layout groups */
+  .image-group {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .image-group.layout-full {
+    grid-template-columns: 1fr;
+  }
+
+  .image-group.layout-two-up {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .image-group.layout-three-up {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .image-group.layout-four-up {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+
+  /* Stack to 2 columns on small screens */
+  @media (max-width: 640px) {
+    .image-group.layout-three-up,
+    .image-group.layout-four-up {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .image-item {
+    margin: 0;
+  }
+
+  .image-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    display: block;
+    object-fit: cover;
+    aspect-ratio: 4 / 3;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    margin: 0;
+  }
+
+  /* Full-width images don't need forced aspect ratio */
+  .layout-full .image-item img {
+    aspect-ratio: unset;
+    max-height: 80vh;
+    object-fit: contain;
+    background: rgba(0,0,0,0.2);
+  }
+
+  .image-item figcaption {
+    margin-top: 0.4rem;
+    font-size: 0.8rem;
+    color: #888;
+    text-align: center;
+    font-style: italic;
   }
 </style>

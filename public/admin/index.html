@@ -1,11 +1,176 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Content Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Whit Cooper — Content Manager</title>
+
+    <!-- Netlify Identity -->
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+    <!-- Fonts — same as main site -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ─────────────────────────────────────────────
+         Dark editor shell — matches whitcooper.com
+         bg: #0a0a0a  |  fg: #fafafa
+         ───────────────────────────────────────────── */
+
+      *, *::before, *::after { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #0a0a0a;
+        color: #fafafa;
+        font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+      }
+
+      /* ── Text inputs and textareas ── */
+      input[type="text"],
+      input[type="url"],
+      input[type="email"],
+      input[type="search"],
+      input[type="datetime-local"],
+      input[type="date"],
+      textarea {
+        background: rgba(255, 255, 255, 0.07) !important;
+        color: #fafafa !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        border-radius: 8px !important;
+        font-family: 'Atkinson Hyperlegible', sans-serif !important;
+        font-size: 0.95rem !important;
+        transition: border-color 0.2s, box-shadow 0.2s !important;
+      }
+
+      input:focus,
+      textarea:focus {
+        border-color: rgba(255, 255, 255, 0.35) !important;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06) !important;
+        outline: none !important;
+      }
+
+      input::placeholder,
+      textarea::placeholder {
+        color: #555 !important;
+      }
+
+      /* ── Select / dropdown ── */
+      select {
+        background: #161616 !important;
+        color: #fafafa !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        border-radius: 8px !important;
+        font-family: 'Atkinson Hyperlegible', sans-serif !important;
+      }
+
+      select option {
+        background: #1a1a1a !important;
+        color: #fafafa !important;
+      }
+
+      /* ── Rich text / markdown editor content area ── */
+      [data-slate-editor],
+      [contenteditable="true"] {
+        color: #e5e5e5 !important;
+        font-family: 'Atkinson Hyperlegible', sans-serif !important;
+        font-size: 1rem !important;
+        line-height: 1.75 !important;
+        caret-color: #fafafa !important;
+      }
+
+      /* ── Scrollbars ── */
+      ::-webkit-scrollbar            { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track      { background: transparent; }
+      ::-webkit-scrollbar-thumb      { background: rgba(255,255,255,0.15); border-radius: 99px; }
+      ::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,0.28); }
+    </style>
   </head>
+
   <body>
+    <!-- Decap CMS -->
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+
+    <script>
+      // ── Load the preview stylesheet into the preview iframe ──
+      CMS.registerPreviewStyle('/admin/preview.css');
+
+      // ── Blog post preview template ──
+      var BlogPreview = createClass({
+        render: function () {
+          var entry      = this.props.entry;
+          var title      = entry.getIn(['data', 'title']);
+          var date       = entry.getIn(['data', 'date']);
+          var summary    = entry.getIn(['data', 'summary']);
+          var coverImage = entry.getIn(['data', 'coverImage']);
+          var body       = this.props.widgetFor('body');
+
+          // Format date identically to the blog page
+          var formattedDate = '';
+          if (date) {
+            try {
+              formattedDate = new Date(date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              });
+            } catch (e) {
+              formattedDate = String(date);
+            }
+          }
+
+          // Empty state — nothing typed yet
+          if (!title && !body) {
+            return h('div', { className: 'preview-root' },
+              h('div', { className: 'preview-empty' },
+                'Fill in the fields on the left to see your post preview here.'
+              )
+            );
+          }
+
+          return h('div', { className: 'preview-root' },
+            h('div', { className: 'preview-container' },
+
+              // Cover image (if set)
+              coverImage && h('div', { className: 'cover-wrap' },
+                h('img', {
+                  src: coverImage,
+                  alt: title || 'Cover image',
+                  className: 'cover-img',
+                })
+              ),
+
+              // Header card — title / date / summary
+              h('div', { className: 'glass-card post-header' },
+                h('h1', { className: 'post-title' }, title || 'Untitled Post'),
+                formattedDate && h('div', { className: 'post-meta' },
+                  h('span', { className: 'post-date' }, formattedDate)
+                ),
+                summary && h('p', { className: 'post-summary' }, summary)
+              ),
+
+              // Body card — rendered markdown
+              h('div', { className: 'glass-card post-body' },
+                body
+                  ? body
+                  : h('p', { className: 'body-placeholder' },
+                      'Write something in the Body field and it will appear here.'
+                    )
+              )
+            )
+          );
+        },
+      });
+
+      CMS.registerPreviewTemplate('blog', BlogPreview);
+    </script>
   </body>
 </html>
