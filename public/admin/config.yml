@@ -21,7 +21,6 @@ collections:
         buttons:
           - bold
           - italic
-          - strikethrough
           - link
           - image
           - heading-one

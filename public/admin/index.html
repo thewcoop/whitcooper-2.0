@@ -151,6 +151,195 @@
       });
 
       CMS.registerPreviewTemplate('blog', BlogPreview);
+
+      // ─────────────────────────────────────────────────────────────────
+      // Editor Component: Single positioned photo
+      //
+      // Adds a "Photo" button to the markdown toolbar.
+      // Options: position (center / float-left / float-right),
+      //          width (full / large / medium / small),
+      //          crop aspect ratio (natural / square / landscape / portrait)
+      // ─────────────────────────────────────────────────────────────────
+      CMS.registerEditorComponent({
+        id:      'cms-photo',
+        label:   'Photo',
+        summary: 'Photo — {{fields.align}}, {{fields.size}}',
+        fields: [
+          { name: 'src', label: 'Upload Photo', widget: 'image' },
+          { name: 'caption', label: 'Caption', widget: 'string', required: false, hint: 'Optional text shown below the photo' },
+          { name: 'alt', label: 'Alt Text', widget: 'string', required: false, hint: 'Describe the image for screen readers (optional)' },
+          {
+            name: 'align', label: 'Position', widget: 'select', default: 'center',
+            hint: 'Center = full-width block. Left/Right = text flows around it.',
+            options: [
+              { label: '⬛  Center  (full-width block)',            value: 'center' },
+              { label: '◧  Float Left  (text wraps on the right)', value: 'left'   },
+              { label: '◨  Float Right  (text wraps on the left)', value: 'right'  },
+            ],
+          },
+          {
+            name: 'size', label: 'Width', widget: 'select', default: 'full',
+            hint: 'Only applies to left/right floated photos.',
+            options: [
+              { label: 'Full Width',   value: 'full'   },
+              { label: 'Large — 70%',  value: 'large'  },
+              { label: 'Medium — 50%', value: 'medium' },
+              { label: 'Small — 33%',  value: 'small'  },
+            ],
+          },
+          {
+            name: 'aspect', label: 'Crop / Aspect Ratio', widget: 'select', default: 'natural',
+            hint: 'Visually crops the photo to a specific shape.',
+            options: [
+              { label: 'Natural  (no crop)',   value: 'natural'   },
+              { label: 'Square  (1:1)',         value: 'square'    },
+              { label: 'Landscape  (16:9)',     value: 'landscape' },
+              { label: 'Portrait  (3:4)',       value: 'portrait'  },
+            ],
+          },
+        ],
+
+        pattern: /<figure class="cms-photo"[^>]*>[\s\S]*?<\/figure>/,
+
+        fromBlock: function (match) {
+          var html = match[0];
+          return {
+            src:     (html.match(/src="([^"]*)"/)                        || [])[1] || '',
+            alt:     (html.match(/alt="([^"]*)"/)                        || [])[1] || '',
+            caption: (html.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/) || [])[1] || '',
+            align:   (html.match(/data-align="([^"]*)"/)                 || [])[1] || 'center',
+            size:    (html.match(/data-size="([^"]*)"/)                  || [])[1] || 'full',
+            aspect:  (html.match(/data-aspect="([^"]*)"/)                || [])[1] || 'natural',
+          };
+        },
+
+        toBlock: function (obj) {
+          var src    = (obj.src     || '').replace(/"/g, '&quot;');
+          var alt    = (obj.alt || obj.caption || '').replace(/"/g, '&quot;');
+          var cap    = obj.caption || '';
+          var align  = obj.align  || 'center';
+          var size   = obj.size   || 'full';
+          var aspect = obj.aspect || 'natural';
+          return (
+            '<figure class="cms-photo" data-align="' + align + '" data-size="' + size + '" data-aspect="' + aspect + '">\n' +
+            '  <img src="' + src + '" alt="' + alt + '" loading="lazy" />\n' +
+            (cap ? '  <figcaption>' + cap + '</figcaption>\n' : '') +
+            '</figure>'
+          );
+        },
+
+        toPreview: function (obj) {
+          var src = obj.src || '', alt = obj.alt || obj.caption || '', cap = obj.caption || '';
+          var align = obj.align || 'center', size = obj.size || 'full', aspect = obj.aspect || 'natural';
+          var sizeMap   = { full: '100%', large: '70%', medium: '50%', small: '33%' };
+          var aspectMap = { natural: 'unset', square: '1/1', landscape: '16/9', portrait: '3/4' };
+          var width = sizeMap[size] || '100%', ratio = aspectMap[aspect] || 'unset';
+          var figStyle = align === 'left'  ? 'float:left;width:'  + width + ';margin:0 1.75rem 1rem 0;'
+                       : align === 'right' ? 'float:right;width:' + width + ';margin:0 0 1rem 1.75rem;'
+                       :                    'display:block;max-width:' + width + ';margin:1.5rem auto;';
+          var imgStyle = 'width:100%;height:auto;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.3);display:block;margin:0;';
+          if (ratio !== 'unset') imgStyle += 'aspect-ratio:' + ratio + ';object-fit:cover;';
+          return (
+            '<figure style="' + figStyle + '">' +
+            '<img src="' + src + '" alt="' + alt + '" style="' + imgStyle + '" />' +
+            (cap ? '<figcaption style="text-align:center;font-size:0.8rem;color:#888;font-style:italic;margin-top:0.4rem;">' + cap + '</figcaption>' : '') +
+            '</figure>'
+          );
+        },
+      });
+
+      // ─────────────────────────────────────────────────────────────────
+      // Editor Component: Photo Row (2–4 photos side by side)
+      //
+      // Adds a "Photo Row" button to the markdown toolbar.
+      // All photos in the row share the same crop aspect ratio.
+      // Photos beyond the selected column count are ignored.
+      // ─────────────────────────────────────────────────────────────────
+      CMS.registerEditorComponent({
+        id:      'cms-photo-row',
+        label:   'Photo Row',
+        summary: '{{fields.cols}}-column photo row',
+        fields: [
+          {
+            name: 'cols', label: 'Number of Columns', widget: 'select', default: '2',
+            hint: 'How many photos to show side by side.',
+            options: [
+              { label: '▪▪  2 Photos Side by Side', value: '2' },
+              { label: '▪▪▪  3 Photos in a Row',    value: '3' },
+              { label: '▪▪▪▪  4 Photos in a Row',   value: '4' },
+            ],
+          },
+          {
+            name: 'aspect', label: 'Crop / Aspect Ratio', widget: 'select', default: 'landscape',
+            hint: 'All photos in this row are cropped to the same shape.',
+            options: [
+              { label: 'Landscape  (16:9)', value: 'landscape' },
+              { label: 'Square  (1:1)',     value: 'square'    },
+              { label: 'Portrait  (3:4)',   value: 'portrait'  },
+              { label: 'Natural  (no crop)',value: 'natural'   },
+            ],
+          },
+          { name: 'img1', label: 'Photo 1',                                  widget: 'image'  },
+          { name: 'cap1', label: 'Caption 1', required: false,                widget: 'string' },
+          { name: 'img2', label: 'Photo 2',                                  widget: 'image'  },
+          { name: 'cap2', label: 'Caption 2', required: false,                widget: 'string' },
+          { name: 'img3', label: 'Photo 3  (3-col & 4-col only)', required: false, widget: 'image'  },
+          { name: 'cap3', label: 'Caption 3', required: false,                widget: 'string' },
+          { name: 'img4', label: 'Photo 4  (4-col only)',          required: false, widget: 'image'  },
+          { name: 'cap4', label: 'Caption 4', required: false,                widget: 'string' },
+        ],
+
+        pattern: /<div class="cms-photo-row"[^>]*>[\s\S]*?<\/div>/,
+
+        fromBlock: function (match) {
+          var html = match[0];
+          var cols   = (html.match(/data-cols="(\d+)"/)    || [])[1] || '2';
+          var aspect = (html.match(/data-aspect="([^"]*)"/) || [])[1] || 'landscape';
+          var figs = [], figRe = /<figure>([\s\S]*?)<\/figure>/g, fm;
+          while ((fm = figRe.exec(html)) !== null) {
+            var fh = fm[1];
+            figs.push({
+              src: (fh.match(/src="([^"]*)"/)                        || [])[1] || '',
+              cap: (fh.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/) || [])[1] || '',
+            });
+          }
+          return {
+            cols: cols, aspect: aspect,
+            img1: (figs[0]||{}).src||'', cap1: (figs[0]||{}).cap||'',
+            img2: (figs[1]||{}).src||'', cap2: (figs[1]||{}).cap||'',
+            img3: (figs[2]||{}).src||'', cap3: (figs[2]||{}).cap||'',
+            img4: (figs[3]||{}).src||'', cap4: (figs[3]||{}).cap||'',
+          };
+        },
+
+        toBlock: function (obj) {
+          var cols = parseInt(obj.cols || '2', 10), aspect = obj.aspect || 'landscape', rows = '';
+          for (var i = 1; i <= cols; i++) {
+            var src = (obj['img' + i] || '').replace(/"/g, '&quot;');
+            var cap = obj['cap' + i] || '';
+            if (!src) continue;
+            rows += '  <figure>\n    <img src="' + src + '" alt="' + cap.replace(/"/g, '&quot;') + '" loading="lazy" />\n' +
+                    (cap ? '    <figcaption>' + cap + '</figcaption>\n' : '') + '  </figure>\n';
+          }
+          return '<div class="cms-photo-row" data-cols="' + cols + '" data-aspect="' + aspect + '">\n' + rows + '</div>';
+        },
+
+        toPreview: function (obj) {
+          var cols = parseInt(obj.cols || '2', 10), aspect = obj.aspect || 'landscape';
+          var aspectMap = { landscape: '16/9', square: '1/1', portrait: '3/4', natural: 'unset' };
+          var ratio = aspectMap[aspect] || '16/9';
+          var imgStyle = 'width:100%;height:auto;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,0.3);display:block;margin:0;';
+          if (ratio !== 'unset') imgStyle += 'aspect-ratio:' + ratio + ';object-fit:cover;';
+          var photos = '';
+          for (var i = 1; i <= cols; i++) {
+            var src = obj['img' + i] || '', cap = obj['cap' + i] || '';
+            if (!src) continue;
+            photos += '<figure style="margin:0;"><img src="' + src + '" alt="' + cap + '" style="' + imgStyle + '" />' +
+                      (cap ? '<figcaption style="text-align:center;font-size:0.75rem;color:#888;font-style:italic;margin-top:0.35rem;">' + cap + '</figcaption>' : '') + '</figure>';
+          }
+          return '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:0.75rem;margin:1.5rem 0;clear:both;">' + photos + '</div>';
+        },
+      });
     </script>
   </body>
 </html>

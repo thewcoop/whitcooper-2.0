@@ -9,4 +9,9 @@ export default defineConfig({
   integrations: [tailwind(), mdx()],
   adapter: netlify(),
   site: 'https://whitcooper.com',
+  markdown: {
+    // Allow raw HTML written in .md files to render as HTML.
+    // Required for CMS editor components (photo alignment/rows) to display correctly.
+    allowDangerousHTML: true,
+  },
 });
