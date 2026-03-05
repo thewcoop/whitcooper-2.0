@@ -274,3 +274,63 @@ html, body {
   text-align: center;
   padding: 3rem 0;
 }
+
+/* ── cms-photo-row: multi-column photo grids ── */
+.post-body div.cms-photo-row {
+  display: grid;
+  gap: 0.75rem;
+  margin: 2rem 0;
+  clear: both;
+}
+.post-body div.cms-photo-row[data-cols="2"] { grid-template-columns: 1fr 1fr; }
+.post-body div.cms-photo-row[data-cols="3"] { grid-template-columns: 1fr 1fr 1fr; }
+.post-body div.cms-photo-row[data-cols="4"] { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+@media (max-width: 600px) {
+  .post-body div.cms-photo-row { grid-template-columns: 1fr !important; }
+}
+
+.post-body div.cms-photo-row figure    { margin: 0; }
+.post-body div.cms-photo-row figcaption {
+  text-align: center; font-size: 0.75rem;
+  color: #71717a; font-style: italic; margin-top: 0.35rem;
+}
+.post-body div.cms-photo-row img {
+  width: 100%; height: auto; border-radius: 10px;
+  display: block; margin: 0;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+}
+.post-body div.cms-photo-row[data-aspect="landscape"] img { aspect-ratio: 16/9; object-fit: cover; }
+.post-body div.cms-photo-row[data-aspect="square"]    img { aspect-ratio: 1/1;  object-fit: cover; }
+.post-body div.cms-photo-row[data-aspect="portrait"]  img { aspect-ratio: 3/4;  object-fit: cover; }
+
+/* ── cms-photo: single positioned photo ── */
+.post-body figure.cms-photo { margin: 2rem 0; }
+
+.post-body figure.cms-photo[data-align="center"] {
+  display: block; margin-left: auto; margin-right: auto;
+}
+.post-body figure.cms-photo[data-align="center"][data-size="full"]   { max-width: 100%; }
+.post-body figure.cms-photo[data-align="center"][data-size="large"]  { max-width: 70%;  }
+.post-body figure.cms-photo[data-align="center"][data-size="medium"] { max-width: 50%;  }
+.post-body figure.cms-photo[data-align="center"][data-size="small"]  { max-width: 33%;  }
+
+.post-body figure.cms-photo[data-align="left"]  { float: left;  margin: 0 2rem 1.5rem 0; width: 50%; }
+.post-body figure.cms-photo[data-align="right"] { float: right; margin: 0 0 1.5rem 2rem; width: 50%; }
+
+.post-body figure.cms-photo img {
+  width: 100%; height: auto; border-radius: 12px;
+  display: block; margin: 0;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.post-body figure.cms-photo[data-aspect="square"]    img { aspect-ratio: 1/1;  object-fit: cover; }
+.post-body figure.cms-photo[data-aspect="landscape"] img { aspect-ratio: 16/9; object-fit: cover; }
+.post-body figure.cms-photo[data-aspect="portrait"]  img { aspect-ratio: 3/4;  object-fit: cover; }
+
+.post-body figure.cms-photo figcaption {
+  text-align: center; font-size: 0.8rem;
+  color: #71717a; font-style: italic; margin-top: 0.4rem;
+}
+
+/* clearfix for floated photos */
+.post-body::after { content: ''; display: table; clear: both; }

@@ -17,75 +17,791 @@
     />
 
     <style>
-      /* ─────────────────────────────────────────────
-         Minimal editor overrides — only target elements
-         where we also control the background. Setting
-         color globally would cascade into the CMS's own
-         white panels and make text invisible.
-         ───────────────────────────────────────────── */
-
+      /* ── Base ── */
       *, *::before, *::after { box-sizing: border-box; }
 
       html, body {
-        margin: 0;
-        padding: 0;
-        /* Background only — no color, which would cascade
-           into CMS panels and create white-on-white text */
+        margin: 0; padding: 0;
         background: #0a0a0a;
         font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-font-smoothing: antialiased;
         min-height: 100vh;
       }
 
-      /* ── Single-line text inputs (Title, Video URL, etc.) ──
-         We set both background AND color here so they work together. */
-      input[type="text"],
-      input[type="url"],
-      input[type="email"],
-      input[type="search"],
-      input[type="datetime-local"],
-      input[type="date"] {
-        background: #1c1c1c !important;
-        color: #f0f0f0 !important;
-        border: 1px solid #3a3a3a !important;
-        border-radius: 6px !important;
+      /* ── CMS text inputs ── */
+      input[type="text"], input[type="url"], input[type="email"],
+      input[type="search"], input[type="datetime-local"], input[type="date"] {
+        background: #1c1c1c !important; color: #f0f0f0 !important;
+        border: 1px solid #3a3a3a !important; border-radius: 6px !important;
         font-family: 'Atkinson Hyperlegible', sans-serif !important;
       }
-
-      input[type="text"]:focus,
-      input[type="url"]:focus,
-      input[type="email"]:focus,
-      input[type="search"]:focus,
-      input[type="datetime-local"]:focus,
-      input[type="date"]:focus {
-        border-color: #666 !important;
-        outline: none !important;
-      }
-
-      input[type="text"]::placeholder,
-      input[type="url"]::placeholder {
-        color: #555 !important;
-      }
+      input[type="text"]:focus, input[type="url"]:focus { border-color: #666 !important; outline: none !important; }
+      input[type="text"]::placeholder, input[type="url"]::placeholder { color: #555 !important; }
 
       /* ── Scrollbars ── */
       ::-webkit-scrollbar            { width: 6px; height: 6px; }
       ::-webkit-scrollbar-track      { background: transparent; }
-      ::-webkit-scrollbar-thumb      { background: rgba(0,0,0,0.25); border-radius: 99px; }
-      ::-webkit-scrollbar-thumb:hover{ background: rgba(0,0,0,0.4); }
+      ::-webkit-scrollbar-thumb      { background: rgba(255,255,255,0.15); border-radius: 99px; }
+      ::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,0.25); }
+
+      /* ════════════════════════════════════════════════════
+         BLOCK EDITOR WIDGET
+         ════════════════════════════════════════════════════ */
+
+      .wc-editor {
+        font-family: 'Atkinson Hyperlegible', sans-serif;
+        color: #e5e5e5;
+        background: rgba(255,255,255,0.03);
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.1);
+        overflow: visible;
+        min-height: 300px;
+      }
+
+      /* ── Format toolbar ── */
+      .wc-format-toolbar {
+        display: flex; align-items: center; gap: 4px;
+        padding: 8px 10px;
+        background: rgba(0,0,0,0.5);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        flex-wrap: wrap;
+        position: sticky; top: 0; z-index: 20;
+        border-radius: 8px 8px 0 0;
+      }
+
+      .wc-tb-btn {
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #c4c4c4; border-radius: 5px;
+        padding: 4px 8px; cursor: pointer;
+        font-size: 0.8rem; font-family: inherit;
+        transition: background 0.15s, color 0.15s;
+        min-height: 28px; line-height: 1;
+        white-space: nowrap;
+      }
+      .wc-tb-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+      .wc-tb-btn:active { background: rgba(255,255,255,0.2); }
+
+      .wc-tb-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.15); margin: 0 3px; flex-shrink: 0; }
+
+      .wc-tb-photo {
+        background: rgba(251,191,36,0.12);
+        border-color: rgba(251,191,36,0.25);
+        color: #fbbf24;
+      }
+      .wc-tb-photo:hover { background: rgba(251,191,36,0.22); color: #fde68a; }
+
+      /* ── Block list ── */
+      .wc-blocks { padding: 12px 14px; min-height: 200px; }
+
+      .wc-block {
+        display: flex; align-items: flex-start; gap: 6px;
+        margin-bottom: 2px; position: relative;
+        border-radius: 6px; padding: 2px 0;
+        border-top: 2px solid transparent;
+        transition: border-color 0.1s;
+      }
+      .wc-block:hover .wc-block-handle,
+      .wc-block:hover .wc-block-del { opacity: 1; }
+      .wc-block.wc-drag-over { border-top-color: #fbbf24; }
+
+      .wc-block-handle {
+        opacity: 0; cursor: grab; color: #444; font-size: 1rem;
+        padding: 4px 2px; flex-shrink: 0; margin-top: 3px;
+        transition: opacity 0.15s; user-select: none;
+        line-height: 1;
+      }
+      .wc-block-handle:active { cursor: grabbing; }
+
+      .wc-block-del {
+        opacity: 0; cursor: pointer; color: #555; background: none;
+        border: none; font-size: 1rem; padding: 2px 5px; flex-shrink: 0;
+        transition: opacity 0.15s, color 0.15s; margin-left: auto;
+        line-height: 1; align-self: flex-start; margin-top: 3px;
+      }
+      .wc-block-del:hover { color: #ef4444; }
+
+      .wc-block-inner { flex: 1; min-width: 0; }
+
+      /* ── Contenteditable text blocks ── */
+      .wc-editable {
+        outline: none; min-height: 1.6em; line-height: 1.75;
+        font-size: 1rem; color: #e5e5e5; word-break: break-word;
+        padding: 2px 0;
+      }
+      .wc-editable:empty::before {
+        content: attr(data-placeholder); color: #444; pointer-events: none;
+      }
+      .wc-editable b, .wc-editable strong { color: #fafafa; }
+      .wc-editable a { color: #fbbf24; text-decoration: underline; }
+
+      .wc-heading-editable {
+        font-size: 1.5rem; font-weight: 700; color: #fafafa;
+        font-family: 'Inter', sans-serif; line-height: 1.3;
+      }
+      .wc-heading3-editable {
+        font-size: 1.2rem; font-weight: 700; color: #fafafa;
+        font-family: 'Inter', sans-serif; line-height: 1.3;
+      }
+      .wc-quote-editable {
+        border-left: 4px solid #fbbf24; padding-left: 1rem;
+        color: #a1a1aa; font-style: italic; line-height: 1.7;
+      }
+      .wc-list-editable { padding-left: 1.25rem; }
+      .wc-list-editable ul, .wc-list-editable li { margin: 0; }
+
+      /* ── Photo block ── */
+      .wc-photo-block {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px; padding: 10px;
+      }
+      .wc-photo-block img {
+        width: 100%; height: auto; border-radius: 8px;
+        display: block; box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+      }
+      .wc-photo-placeholder {
+        display: flex; align-items: center; justify-content: center;
+        min-height: 110px; background: rgba(255,255,255,0.05);
+        border-radius: 8px; color: #555; font-size: 0.85rem;
+        cursor: pointer; gap: 8px; border: 1px dashed rgba(255,255,255,0.12);
+        transition: background 0.15s, color 0.15s;
+      }
+      .wc-photo-placeholder:hover { background: rgba(255,255,255,0.09); color: #fbbf24; }
+
+      .wc-photo-controls {
+        display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+        margin-top: 8px; padding-top: 8px;
+        border-top: 1px solid rgba(255,255,255,0.07);
+      }
+      .wc-ctrl-label { font-size: 0.68rem; color: #666; text-transform: uppercase; letter-spacing: 0.06em; }
+      .wc-ctrl-select {
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.13);
+        color: #d4d4d8; border-radius: 5px;
+        padding: 3px 6px; font-size: 0.75rem; font-family: inherit;
+        cursor: pointer;
+      }
+      .wc-ctrl-select:focus { outline: none; border-color: #555; }
+
+      .wc-change-btn {
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+        color: #888; border-radius: 4px; padding: 3px 8px; font-size: 0.72rem;
+        cursor: pointer; font-family: inherit; margin-top: 6px; display: block; width: 100%;
+        transition: background 0.15s, color 0.15s;
+      }
+      .wc-change-btn:hover { background: rgba(255,255,255,0.12); color: #ccc; }
+
+      .wc-caption-input {
+        width: 100%; margin-top: 6px;
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+        color: #888; border-radius: 5px; padding: 5px 8px;
+        font-size: 0.8rem; font-family: inherit; font-style: italic;
+      }
+      .wc-caption-input::placeholder { color: #444; }
+      .wc-caption-input:focus { outline: none; border-color: #444; }
+
+      /* ── Photo row block ── */
+      .wc-photo-row-block {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px; padding: 10px;
+      }
+      .wc-row-grid { display: grid; gap: 6px; }
+      .wc-row-slot {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px; overflow: hidden;
+      }
+      .wc-row-slot img { width: 100%; display: block; }
+      .wc-row-placeholder {
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; min-height: 80px;
+        color: #555; font-size: 0.78rem; cursor: pointer; gap: 4px;
+        transition: background 0.15s, color 0.15s;
+      }
+      .wc-row-placeholder:hover { background: rgba(255,255,255,0.05); color: #fbbf24; }
+      .wc-slot-caption {
+        width: 100%; background: transparent; border: none;
+        border-top: 1px solid rgba(255,255,255,0.07);
+        color: #777; padding: 4px 6px; font-size: 0.72rem;
+        font-style: italic; font-family: inherit;
+      }
+      .wc-slot-caption::placeholder { color: #3a3a3a; }
+      .wc-slot-caption:focus { outline: none; background: rgba(255,255,255,0.03); }
+
+      /* ── Add block ── */
+      .wc-add-area { position: relative; padding: 6px 0 6px 28px; margin-top: 4px; }
+      .wc-add-btn {
+        background: none; border: 1px dashed rgba(255,255,255,0.14);
+        color: #555; border-radius: 6px; padding: 5px 14px;
+        cursor: pointer; font-size: 0.82rem; font-family: inherit;
+        transition: border-color 0.15s, color 0.15s;
+      }
+      .wc-add-btn:hover { border-color: rgba(255,255,255,0.3); color: #aaa; }
+
+      .wc-block-menu {
+        position: absolute; bottom: calc(100% + 4px); left: 0;
+        background: #191919; border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 10px; padding: 6px; z-index: 100;
+        min-width: 175px; box-shadow: 0 12px 36px rgba(0,0,0,0.7);
+      }
+      .wc-menu-btn {
+        display: flex; align-items: center; gap: 9px;
+        padding: 7px 10px; border-radius: 6px; cursor: pointer;
+        font-size: 0.82rem; color: #b4b4b4; width: 100%;
+        background: none; border: none; font-family: inherit; text-align: left;
+        transition: background 0.1s, color 0.1s;
+      }
+      .wc-menu-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+      .wc-menu-icon { font-size: 0.95em; width: 20px; text-align: center; flex-shrink: 0; }
+      .wc-menu-sep { height: 1px; background: rgba(255,255,255,0.08); margin: 4px 0; }
+
+      /* mobile: always show handles */
+      @media (max-width: 640px) {
+        .wc-block-handle, .wc-block-del { opacity: 0.5; }
+        .wc-format-toolbar { position: relative; }
+      }
     </style>
   </head>
 
   <body>
+    <!-- marked.js for parsing existing markdown content on load -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <!-- Decap CMS -->
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 
     <script>
-      // ── Load the preview stylesheet into the preview iframe ──
+      // ════════════════════════════════════════════════════════════════════════
+      // UTILITIES
+      // ════════════════════════════════════════════════════════════════════════
+      var _uid = 0;
+      function uid() { return 'b' + (++_uid) + '_' + Math.random().toString(36).slice(2, 6); }
+
+      function esc(s) {
+        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // BLOCKS ↔ HTML
+      // ════════════════════════════════════════════════════════════════════════
+      function blocksToHtml(blocks) {
+        return (blocks || []).map(function(b) {
+          if (!b) return '';
+          if (b.type === 'paragraph') return b.html ? '<p>' + b.html + '</p>' : '';
+          if (b.type === 'heading') return '<h' + (b.level || 2) + '>' + (b.html || '') + '</h' + (b.level || 2) + '>';
+          if (b.type === 'quote') return '<blockquote>' + (b.html || '') + '</blockquote>';
+          if (b.type === 'list') return '<ul>' + (b.html || '') + '</ul>';
+          if (b.type === 'photo') {
+            var cap = b.caption ? '\n  <figcaption>' + esc(b.caption) + '</figcaption>' : '';
+            return '<figure class="cms-photo" data-align="' + esc(b.align || 'center') + '" data-size="' + esc(b.size || 'full') + '" data-aspect="' + esc(b.aspect || 'natural') + '">\n  <img src="' + esc(b.src || '') + '" alt="' + esc(b.alt || b.caption || '') + '" loading="lazy" />' + cap + '\n</figure>';
+          }
+          if (b.type === 'photo-row') {
+            var figs = (b.photos || []).filter(function(p) { return p && p.src; }).map(function(p) {
+              var pc = p.caption ? '\n    <figcaption>' + esc(p.caption) + '</figcaption>' : '';
+              return '  <figure>\n    <img src="' + esc(p.src) + '" alt="' + esc(p.caption || '') + '" loading="lazy" />' + pc + '\n  </figure>';
+            }).join('\n');
+            return '<div class="cms-photo-row" data-cols="' + esc(b.cols || '2') + '" data-aspect="' + esc(b.aspect || 'portrait') + '">\n' + figs + '\n</div>';
+          }
+          return '';
+        }).filter(Boolean).join('\n\n');
+      }
+
+      function htmlToBlocks(html) {
+        if (!html || !html.trim()) return [];
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        var out = [];
+        Array.from(tmp.children).forEach(function(el) {
+          var t = el.tagName.toLowerCase();
+          if (t === 'p') {
+            if (el.innerHTML.trim()) out.push({ id: uid(), type: 'paragraph', html: el.innerHTML });
+          } else if (/^h[2-6]$/.test(t)) {
+            out.push({ id: uid(), type: 'heading', level: t[1], html: el.innerHTML });
+          } else if (t === 'blockquote') {
+            out.push({ id: uid(), type: 'quote', html: el.innerHTML });
+          } else if (t === 'ul' || t === 'ol') {
+            out.push({ id: uid(), type: 'list', html: el.innerHTML });
+          } else if (t === 'figure' && el.classList.contains('cms-photo')) {
+            var img = el.querySelector('img'), fc = el.querySelector('figcaption');
+            out.push({
+              id: uid(), type: 'photo',
+              src:     img ? (img.getAttribute('src') || '') : '',
+              alt:     img ? (img.getAttribute('alt') || '') : '',
+              caption: fc ? fc.textContent : '',
+              align:   el.getAttribute('data-align') || 'center',
+              size:    el.getAttribute('data-size') || 'full',
+              aspect:  el.getAttribute('data-aspect') || 'natural',
+            });
+          } else if (t === 'div' && el.classList.contains('cms-photo-row')) {
+            var figs = Array.from(el.querySelectorAll(':scope > figure'));
+            out.push({
+              id: uid(), type: 'photo-row',
+              cols:   el.getAttribute('data-cols') || '2',
+              aspect: el.getAttribute('data-aspect') || 'portrait',
+              photos: figs.map(function(f) {
+                var fi = f.querySelector('img'), fc2 = f.querySelector('figcaption');
+                return { src: fi ? (fi.getAttribute('src') || '') : '', caption: fc2 ? fc2.textContent : '' };
+              }),
+            });
+          } else if (t !== 'br' && t !== 'hr' && el.textContent.trim()) {
+            out.push({ id: uid(), type: 'paragraph', html: el.innerHTML });
+          }
+        });
+        return out;
+      }
+
+      function parseContent(raw) {
+        if (!raw || !raw.trim()) return [];
+        // Detect markdown vs HTML by checking first meaningful line
+        var firstLine = raw.trim().split('\n')[0];
+        var looksMarkdown = /^#{1,6}\s/.test(firstLine) ||
+          (!/<[a-z]/i.test(firstLine) && /\*\*|\[.+\]\(|!\[/.test(raw));
+        var html = looksMarkdown && window.marked ? window.marked.parse(raw) : raw;
+        return htmlToBlocks(html);
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // ContentEditable sub-component
+      // Prevents React from wiping innerHTML on re-render while user is typing
+      // ════════════════════════════════════════════════════════════════════════
+      var CE = createClass({
+        shouldComponentUpdate: function(np) {
+          if (this._el && document.activeElement === this._el) return false;
+          return np.html !== this.props.html || np.className !== this.props.className;
+        },
+        componentDidMount: function() {
+          if (this._el) this._el.innerHTML = this.props.html || '';
+        },
+        componentDidUpdate: function() {
+          if (this._el && document.activeElement !== this._el) this._el.innerHTML = this.props.html || '';
+        },
+        render: function() {
+          var self = this, p = this.props;
+          return h('div', {
+            className: p.className,
+            contentEditable: true,
+            suppressContentEditableWarning: true,
+            'data-placeholder': p.placeholder,
+            ref: function(el) { self._el = el; },
+            onInput:  function(e) { if (p.onChange) p.onChange(e.currentTarget.innerHTML); },
+            onKeyDown: p.onKeyDown,
+            onFocus:   p.onFocus,
+            onBlur:    p.onBlur,
+          });
+        },
+      });
+
+      // ════════════════════════════════════════════════════════════════════════
+      // BLOCK EDITOR CONTROL
+      // ════════════════════════════════════════════════════════════════════════
+      var BlockEditorControl = createClass({
+
+        getInitialState: function() {
+          return {
+            blocks:        [],
+            showMenu:      false,
+            activeBlock:   null,
+            pendingMedia:  null,   // { blockId, slotIndex|null }
+            dragBlock:     null,
+            dragOver:      null,
+          };
+        },
+
+        componentDidMount: function() {
+          var raw    = this.props.value || '';
+          var blocks = parseContent(raw);
+          if (!blocks.length) blocks = [{ id: uid(), type: 'paragraph', html: '' }];
+          this.setState({ blocks: blocks });
+        },
+
+        componentDidUpdate: function(prevProps, prevState) {
+          var self = this;
+
+          // ── Handle media library result ──
+          var pm = self.state.pendingMedia;
+          if (pm && self.props.mediaPaths) {
+            var cid = pm.slotIndex != null
+              ? ('wc-pr-' + pm.blockId + '-' + pm.slotIndex)
+              : ('wc-ph-' + pm.blockId);
+            var mp     = self.props.mediaPaths;
+            var pmp    = prevProps.mediaPaths;
+            var newPath = mp  && mp.get  ? mp.get(cid)  : (mp  || {})[cid];
+            var oldPath = pmp && pmp.get ? pmp.get(cid) : (pmp || {})[cid];
+
+            if (newPath && newPath !== oldPath) {
+              var bid = pm.blockId, si = pm.slotIndex;
+              self.setState({ pendingMedia: null }, function() {
+                if (si != null) {
+                  var blk = self.state.blocks.find(function(b) { return b.id === bid; });
+                  if (blk) {
+                    var photos = (blk.photos || []).slice();
+                    photos[si] = Object.assign({}, photos[si] || {}, { src: newPath });
+                    self._upd(bid, { photos: photos });
+                  }
+                } else {
+                  self._upd(bid, { src: newPath });
+                }
+              });
+              try {
+                if (self.props.clearMediaControl) self.props.clearMediaControl({ id: cid });
+              } catch(e) {}
+            }
+          }
+
+          // ── Emit HTML when blocks change ──
+          if (prevState.blocks !== self.state.blocks) {
+            self.props.onChange(blocksToHtml(self.state.blocks));
+          }
+        },
+
+        // ── Block mutations ──
+        _upd: function(id, changes) {
+          this.setState(function(s) {
+            return { blocks: s.blocks.map(function(b) { return b.id === id ? Object.assign({}, b, changes) : b; }) };
+          });
+        },
+
+        _del: function(id) {
+          this.setState(function(s) {
+            var bs = s.blocks.filter(function(b) { return b.id !== id; });
+            if (!bs.length) bs = [{ id: uid(), type: 'paragraph', html: '' }];
+            return { blocks: bs };
+          });
+        },
+
+        _add: function(type) {
+          var self = this;
+          var b = { id: uid(), type: type };
+          if (type === 'paragraph')  { b.html = ''; }
+          if (type === 'heading2')   { b.type = 'heading'; b.level = '2'; b.html = ''; }
+          if (type === 'heading3')   { b.type = 'heading'; b.level = '3'; b.html = ''; }
+          if (type === 'quote')      { b.html = ''; }
+          if (type === 'list')       { b.html = '<li>List item</li>'; }
+          if (type === 'photo')      { b.src = ''; b.alt = ''; b.caption = ''; b.align = 'center'; b.size = 'full'; b.aspect = 'natural'; }
+          if (type === 'photo-row')  { b.type = 'photo-row'; b.cols = '2'; b.aspect = 'portrait'; b.photos = [{src:'',caption:''},{src:'',caption:''}]; }
+
+          self.setState(function(s) {
+            return { blocks: s.blocks.concat([b]), showMenu: false };
+          }, function() {
+            // For photo blocks, immediately open media library
+            if (b.type === 'photo') self._openMedia(b.id, null);
+          });
+        },
+
+        // ── Media library ──
+        _openMedia: function(blockId, slotIndex) {
+          var self  = this;
+          var cid   = slotIndex != null ? ('wc-pr-' + blockId + '-' + slotIndex) : ('wc-ph-' + blockId);
+          self.setState({ pendingMedia: { blockId: blockId, slotIndex: slotIndex } });
+          try {
+            if (!self.props.openMediaLibrary) throw new Error('no openMediaLibrary');
+            self.props.openMediaLibrary({ controlID: cid, allowMultiple: false });
+          } catch(e) {
+            // Graceful fallback: prompt for URL
+            var url = window.prompt('Paste the image path (upload via Media section first)\ne.g. /uploads/photo.jpg');
+            if (url) {
+              if (slotIndex != null) {
+                var blk = self.state.blocks.find(function(b) { return b.id === blockId; });
+                if (blk) {
+                  var photos = (blk.photos || []).slice();
+                  photos[slotIndex] = Object.assign({}, photos[slotIndex] || {}, { src: url });
+                  self._upd(blockId, { photos: photos });
+                }
+              } else {
+                self._upd(blockId, { src: url });
+              }
+            }
+            self.setState({ pendingMedia: null });
+          }
+        },
+
+        // ── Text formatting ──
+        _fmt: function(cmd) {
+          return function(e) { e.preventDefault(); document.execCommand(cmd, false, null); };
+        },
+        _link: function(e) {
+          e.preventDefault();
+          var sel = window.getSelection();
+          if (!sel || sel.isCollapsed) { alert('Select some text first, then click the link button.'); return; }
+          var url = window.prompt('Enter URL:', 'https://');
+          if (url) document.execCommand('createLink', false, url);
+        },
+        _setBlockType: function(type, extra) {
+          var id = this.state.activeBlock;
+          if (!id) return;
+          var changes = { type: type };
+          if (type === 'heading') changes.level = extra || '2';
+          this._upd(id, changes);
+        },
+
+        // ── Keyboard handling ──
+        _keyDown: function(e, block) {
+          var self = this;
+          if (e.key === 'Enter' && !e.shiftKey && block.type !== 'list') {
+            e.preventDefault();
+            var nb = { id: uid(), type: 'paragraph', html: '' };
+            self.setState(function(s) {
+              var idx = s.blocks.findIndex(function(b) { return b.id === block.id; });
+              var bs  = s.blocks.slice();
+              bs.splice(idx + 1, 0, nb);
+              return { blocks: bs, activeBlock: nb.id };
+            }, function() {
+              var el = document.querySelector('[data-bid="' + nb.id + '"] .wc-editable');
+              if (el) el.focus();
+            });
+          }
+          if (e.key === 'Backspace' && (!block.html || block.html === '<br>') && block.type === 'paragraph') {
+            var idx = self.state.blocks.findIndex(function(b) { return b.id === block.id; });
+            if (idx > 0) {
+              e.preventDefault();
+              var prevId = self.state.blocks[idx - 1].id;
+              self._del(block.id);
+              setTimeout(function() {
+                var el = document.querySelector('[data-bid="' + prevId + '"] .wc-editable');
+                if (el) {
+                  el.focus();
+                  var r = document.createRange(); r.selectNodeContents(el); r.collapse(false);
+                  var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+                }
+              }, 0);
+            }
+          }
+        },
+
+        // ── Drag & drop ──
+        _dragStart: function(e, id) { this.setState({ dragBlock: id }); e.dataTransfer.effectAllowed = 'move'; },
+        _dragOver:  function(e, id) { e.preventDefault(); if (id !== this.state.dragBlock) this.setState({ dragOver: id }); },
+        _drop:      function(e, toId) {
+          e.preventDefault();
+          var fromId = this.state.dragBlock;
+          if (!fromId || fromId === toId) { this.setState({ dragBlock: null, dragOver: null }); return; }
+          this.setState(function(s) {
+            var bs  = s.blocks.slice();
+            var fi  = bs.findIndex(function(b) { return b.id === fromId; });
+            var ti  = bs.findIndex(function(b) { return b.id === toId; });
+            if (fi < 0 || ti < 0) return { dragBlock: null, dragOver: null };
+            var mv  = bs.splice(fi, 1)[0];
+            bs.splice(ti, 0, mv);
+            return { blocks: bs, dragBlock: null, dragOver: null };
+          });
+        },
+        _dragEnd:   function() { this.setState({ dragBlock: null, dragOver: null }); },
+
+        // ════════════════════════════════════
+        // RENDER HELPERS
+        // ════════════════════════════════════
+
+        _renderPhotoBlock: function(block) {
+          var self = this;
+          var aspectStyle = { natural: {}, square: { aspectRatio: '1/1', objectFit: 'cover' }, landscape: { aspectRatio: '16/9', objectFit: 'cover' }, portrait: { aspectRatio: '3/4', objectFit: 'cover' } }[block.aspect || 'natural'] || {};
+
+          return h('div', { className: 'wc-photo-block' },
+            block.src
+              ? h('img', { src: block.src, alt: block.alt || block.caption || '', style: Object.assign({ maxHeight: '420px', width: '100%' }, aspectStyle) })
+              : h('div', { className: 'wc-photo-placeholder', onClick: function() { self._openMedia(block.id, null); } },
+                  h('span', null, '📷'), h('span', null, 'Click to upload photo')),
+            block.src && h('button', { className: 'wc-change-btn', onClick: function() { self._openMedia(block.id, null); } }, '↺  Change photo'),
+            h('div', { className: 'wc-photo-controls' },
+              h('span', { className: 'wc-ctrl-label' }, 'Align'),
+              h('select', { className: 'wc-ctrl-select', value: block.align || 'center', onChange: function(e) { self._upd(block.id, { align: e.target.value }); } },
+                h('option', { value: 'center' }, 'Center'), h('option', { value: 'left' }, 'Float Left'), h('option', { value: 'right' }, 'Float Right')),
+              h('span', { className: 'wc-ctrl-label' }, 'Width'),
+              h('select', { className: 'wc-ctrl-select', value: block.size || 'full', onChange: function(e) { self._upd(block.id, { size: e.target.value }); } },
+                h('option', { value: 'full' }, 'Full'), h('option', { value: 'large' }, '70%'), h('option', { value: 'medium' }, '50%'), h('option', { value: 'small' }, '33%')),
+              h('span', { className: 'wc-ctrl-label' }, 'Crop'),
+              h('select', { className: 'wc-ctrl-select', value: block.aspect || 'natural', onChange: function(e) { self._upd(block.id, { aspect: e.target.value }); } },
+                h('option', { value: 'natural' }, 'Natural'), h('option', { value: 'square' }, 'Square'), h('option', { value: 'landscape' }, 'Landscape 16:9'), h('option', { value: 'portrait' }, 'Portrait 3:4')),
+            ),
+            h('input', { type: 'text', className: 'wc-caption-input', placeholder: 'Caption (optional)', value: block.caption || '',
+              onChange: function(e) { self._upd(block.id, { caption: e.target.value, alt: e.target.value }); } }),
+          );
+        },
+
+        _renderPhotoRowBlock: function(block) {
+          var self  = this;
+          var cols  = parseInt(block.cols || '2', 10);
+          var aspect = block.aspect || 'portrait';
+          var photos = (block.photos || []).slice();
+          while (photos.length < cols) photos.push({ src: '', caption: '' });
+          photos = photos.slice(0, cols);
+          var aspectStyle = { landscape: { aspectRatio: '16/9', objectFit: 'cover', width: '100%' }, square: { aspectRatio: '1/1', objectFit: 'cover', width: '100%' }, portrait: { aspectRatio: '3/4', objectFit: 'cover', width: '100%' }, natural: { width: '100%', height: 'auto' } }[aspect] || {};
+          var placeholderStyle = { aspectRatio: aspectStyle.aspectRatio || '4/3', minHeight: '80px' };
+
+          return h('div', { className: 'wc-photo-row-block' },
+            h('div', { className: 'wc-row-grid', style: { gridTemplateColumns: 'repeat(' + cols + ', 1fr)', display: 'grid', gap: '6px' } },
+              photos.map(function(photo, si) {
+                return h('div', { key: si, className: 'wc-row-slot' },
+                  photo.src
+                    ? h('img', { src: photo.src, alt: photo.caption || '', style: aspectStyle })
+                    : h('div', { className: 'wc-row-placeholder', style: placeholderStyle, onClick: function() { self._openMedia(block.id, si); } },
+                        h('span', null, '📷'), h('span', null, 'Photo ' + (si + 1))),
+                  photo.src && h('button', { className: 'wc-change-btn', style: { fontSize: '0.68rem', margin: '3px' }, onClick: function() { self._openMedia(block.id, si); } }, '↺'),
+                  h('input', { type: 'text', className: 'wc-slot-caption', placeholder: 'Caption...', value: photo.caption || '',
+                    onChange: function(e) { var ps = photos.slice(); ps[si] = Object.assign({}, ps[si], { caption: e.target.value }); self._upd(block.id, { photos: ps }); } }),
+                );
+              })
+            ),
+            h('div', { className: 'wc-photo-controls', style: { marginTop: '8px' } },
+              h('span', { className: 'wc-ctrl-label' }, 'Columns'),
+              h('select', { className: 'wc-ctrl-select', value: block.cols || '2',
+                onChange: function(e) { var n = parseInt(e.target.value, 10); var ps = (block.photos||[]).slice(); while(ps.length<n) ps.push({src:'',caption:''}); self._upd(block.id, { cols: e.target.value, photos: ps }); } },
+                h('option', { value: '2' }, '2 photos'), h('option', { value: '3' }, '3 photos'), h('option', { value: '4' }, '4 photos')),
+              h('span', { className: 'wc-ctrl-label' }, 'Crop'),
+              h('select', { className: 'wc-ctrl-select', value: block.aspect || 'portrait',
+                onChange: function(e) { self._upd(block.id, { aspect: e.target.value }); } },
+                h('option', { value: 'portrait' }, 'Portrait 3:4'), h('option', { value: 'landscape' }, 'Landscape 16:9'), h('option', { value: 'square' }, 'Square'), h('option', { value: 'natural' }, 'Natural')),
+            ),
+          );
+        },
+
+        _renderBlock: function(block) {
+          var self = this;
+          var isOver = self.state.dragOver === block.id;
+
+          return h('div', {
+            key: block.id,
+            'data-bid': block.id,
+            className: 'wc-block' + (isOver ? ' wc-drag-over' : ''),
+            draggable: true,
+            onDragStart: function(e) { self._dragStart(e, block.id); },
+            onDragOver:  function(e) { self._dragOver(e, block.id); },
+            onDrop:      function(e) { self._drop(e, block.id); },
+            onDragEnd:   self._dragEnd.bind(self),
+          },
+            h('div', { className: 'wc-block-handle', title: 'Drag to reorder' }, '⠿'),
+            h('div', { className: 'wc-block-inner' },
+              block.type === 'paragraph' && h(CE, {
+                className: 'wc-editable',
+                html: block.html, placeholder: 'Write something...',
+                onChange: function(v) { self._upd(block.id, { html: v }); },
+                onKeyDown: function(e) { self._keyDown(e, block); },
+                onFocus: function() { self.setState({ activeBlock: block.id }); },
+                onBlur:  function() { self.setState({ activeBlock: null }); },
+              }),
+              block.type === 'heading' && h(CE, {
+                className: 'wc-editable ' + (block.level === '3' ? 'wc-heading3-editable' : 'wc-heading-editable'),
+                html: block.html, placeholder: block.level === '3' ? 'Subheading' : 'Heading',
+                onChange: function(v) { self._upd(block.id, { html: v }); },
+                onKeyDown: function(e) { self._keyDown(e, block); },
+                onFocus: function() { self.setState({ activeBlock: block.id }); },
+              }),
+              block.type === 'quote' && h(CE, {
+                className: 'wc-editable wc-quote-editable',
+                html: block.html, placeholder: 'Quotation...',
+                onChange: function(v) { self._upd(block.id, { html: v }); },
+                onKeyDown: function(e) { self._keyDown(e, block); },
+                onFocus: function() { self.setState({ activeBlock: block.id }); },
+              }),
+              block.type === 'list' && h(CE, {
+                className: 'wc-editable wc-list-editable',
+                html: '<ul>' + (block.html || '<li></li>') + '</ul>',
+                placeholder: 'List item...',
+                onChange: function(v) {
+                  // Strip wrapping <ul> that execCommand may add
+                  var clean = v.replace(/^<ul[^>]*>|<\/ul>$/gi, '');
+                  self._upd(block.id, { html: clean });
+                },
+                onFocus: function() { self.setState({ activeBlock: block.id }); },
+              }),
+              block.type === 'photo'     && self._renderPhotoBlock(block),
+              block.type === 'photo-row' && self._renderPhotoRowBlock(block),
+            ),
+            h('button', { className: 'wc-block-del', onClick: function() { self._del(block.id); }, title: 'Delete block' }, '×'),
+          );
+        },
+
+        // ════════════════════════════════════
+        // MAIN RENDER
+        // ════════════════════════════════════
+        render: function() {
+          var self = this;
+          var activeId = self.state.activeBlock;
+
+          return h('div', {
+            className: 'wc-editor',
+            onClick: function(e) {
+              if (!e.target.closest('.wc-add-area')) self.setState({ showMenu: false });
+            },
+          },
+            // ── Sticky format toolbar ──
+            h('div', { className: 'wc-format-toolbar' },
+              h('button', { className: 'wc-tb-btn', title: 'Bold (select text first)',   onMouseDown: self._fmt('bold')   }, h('strong', null, 'B')),
+              h('button', { className: 'wc-tb-btn', title: 'Italic (select text first)', onMouseDown: self._fmt('italic') }, h('em', null, 'I')),
+              h('button', { className: 'wc-tb-btn', title: 'Link (select text first)',   onMouseDown: self._link.bind(self) }, '🔗'),
+              h('span', { className: 'wc-tb-sep' }),
+              h('button', { className: 'wc-tb-btn', title: 'Convert active block to Heading 2',
+                onMouseDown: function(e) { e.preventDefault(); self._setBlockType('heading', '2'); } }, 'H2'),
+              h('button', { className: 'wc-tb-btn', title: 'Convert active block to Heading 3',
+                onMouseDown: function(e) { e.preventDefault(); self._setBlockType('heading', '3'); } }, 'H3'),
+              h('button', { className: 'wc-tb-btn', title: 'Convert active block to Quote',
+                onMouseDown: function(e) { e.preventDefault(); self._setBlockType('quote'); } }, '"'),
+              h('button', { className: 'wc-tb-btn', title: 'Convert active block to List',
+                onMouseDown: function(e) { e.preventDefault(); self._setBlockType('list'); } }, '≡'),
+              h('span', { className: 'wc-tb-sep' }),
+              h('button', { className: 'wc-tb-btn wc-tb-photo', title: 'Insert Photo block',
+                onMouseDown: function(e) { e.preventDefault(); self._add('photo'); } }, '📷  Photo'),
+              h('button', { className: 'wc-tb-btn wc-tb-photo', title: 'Insert Photo Row (2–4 columns)',
+                onMouseDown: function(e) { e.preventDefault(); self._add('photo-row'); } }, '⊞  Photo Row'),
+            ),
+
+            // ── Blocks ──
+            h('div', { className: 'wc-blocks' },
+              self.state.blocks.map(function(b) { return self._renderBlock(b); }),
+
+              // ── Add block button ──
+              h('div', { className: 'wc-add-area' },
+                h('button', { className: 'wc-add-btn', type: 'button',
+                  onClick: function(e) { e.stopPropagation(); self.setState(function(s) { return { showMenu: !s.showMenu }; }); }
+                }, '+ Add block'),
+
+                self.state.showMenu && h('div', { className: 'wc-block-menu' },
+                  h('button', { className: 'wc-menu-btn', onClick: function() { self._add('paragraph'); } },
+                    h('span', { className: 'wc-menu-icon' }, '¶'), 'Paragraph'),
+                  h('button', { className: 'wc-menu-btn', onClick: function() { self._add('heading2'); } },
+                    h('span', { className: 'wc-menu-icon' }, 'H2'), 'Heading 2'),
+                  h('button', { className: 'wc-menu-btn', onClick: function() { self._add('heading3'); } },
+                    h('span', { className: 'wc-menu-icon' }, 'H3'), 'Heading 3'),
+                  h('button', { className: 'wc-menu-btn', onClick: function() { self._add('quote'); } },
+                    h('span', { className: 'wc-menu-icon' }, '"'), 'Quote'),
+                  h('button', { className: 'wc-menu-btn', onClick: function() { self._add('list'); } },
+                    h('span', { className: 'wc-menu-icon' }, '≡'), 'Bullet List'),
+                  h('div', { className: 'wc-menu-sep' }),
+                  h('button', { className: 'wc-menu-btn', onClick: function() { self._add('photo'); } },
+                    h('span', { className: 'wc-menu-icon' }, '📷'), 'Photo'),
+                  h('button', { className: 'wc-menu-btn', onClick: function() { self._add('photo-row'); } },
+                    h('span', { className: 'wc-menu-icon' }, '⊞'), 'Photo Row (2–4 cols)'),
+                ),
+              ),
+            ),
+          );
+        },
+      });
+
+      // ── Block Editor Preview (right-side preview pane) ──
+      var BlockEditorPreview = createClass({
+        render: function() {
+          return h('div', {
+            className: 'post-body',
+            dangerouslySetInnerHTML: { __html: this.props.value || '' },
+          });
+        },
+      });
+
+      // ── Register the custom widget ──
+      CMS.registerWidget('block-editor', BlockEditorControl, BlockEditorPreview);
+
+      // ════════════════════════════════════════════════════════════════════════
+      // PREVIEW STYLESHEET (right-side preview pane)
+      // ════════════════════════════════════════════════════════════════════════
       CMS.registerPreviewStyle('/admin/preview.css');
 
-      // ── Blog post preview template ──
+      // ════════════════════════════════════════════════════════════════════════
+      // BLOG POST PREVIEW TEMPLATE (right-side pane)
+      // ════════════════════════════════════════════════════════════════════════
       var BlogPreview = createClass({
-        render: function () {
+        render: function() {
           var entry      = this.props.entry;
           var title      = entry.getIn(['data', 'title']);
           var date       = entry.getIn(['data', 'date']);
@@ -93,264 +809,37 @@
           var coverImage = entry.getIn(['data', 'coverImage']);
           var body       = this.props.widgetFor('body');
 
-          // Format date identically to the blog page
           var formattedDate = '';
           if (date) {
             try {
-              formattedDate = new Date(date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              });
-            } catch (e) {
-              formattedDate = String(date);
-            }
+              formattedDate = new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            } catch(e) { formattedDate = String(date); }
           }
 
-          // Empty state — nothing typed yet
           if (!title && !body) {
             return h('div', { className: 'preview-root' },
-              h('div', { className: 'preview-empty' },
-                'Fill in the fields on the left to see your post preview here.'
-              )
-            );
+              h('div', { className: 'preview-empty' }, 'Fill in the fields on the left to see your post preview here.'));
           }
 
           return h('div', { className: 'preview-root' },
             h('div', { className: 'preview-container' },
-
-              // Cover image (if set)
               coverImage && h('div', { className: 'cover-wrap' },
-                h('img', {
-                  src: coverImage,
-                  alt: title || 'Cover image',
-                  className: 'cover-img',
-                })
-              ),
-
-              // Header card — title / date / summary
+                h('img', { src: coverImage, alt: title || 'Cover image', className: 'cover-img' })),
               h('div', { className: 'glass-card post-header' },
                 h('h1', { className: 'post-title' }, title || 'Untitled Post'),
                 formattedDate && h('div', { className: 'post-meta' },
-                  h('span', { className: 'post-date' }, formattedDate)
-                ),
-                summary && h('p', { className: 'post-summary' }, summary)
-              ),
-
-              // Body card — rendered markdown
+                  h('span', { className: 'post-date' }, formattedDate)),
+                summary && h('p', { className: 'post-summary' }, summary)),
               h('div', { className: 'glass-card post-body' },
                 body
                   ? body
-                  : h('p', { className: 'body-placeholder' },
-                      'Write something in the Body field and it will appear here.'
-                    )
-              )
-            )
+                  : h('p', { className: 'body-placeholder' }, 'Write something in the Body field and it will appear here.')),
+            ),
           );
         },
       });
 
       CMS.registerPreviewTemplate('blog', BlogPreview);
-
-      // ─────────────────────────────────────────────────────────────────
-      // Editor Component: Single positioned photo
-      //
-      // Adds a "Photo" button to the markdown toolbar.
-      // Options: position (center / float-left / float-right),
-      //          width (full / large / medium / small),
-      //          crop aspect ratio (natural / square / landscape / portrait)
-      // ─────────────────────────────────────────────────────────────────
-      CMS.registerEditorComponent({
-        id:      'cms-photo',
-        label:   'Photo',
-        summary: 'Photo — {{fields.align}}, {{fields.size}}',
-        fields: [
-          { name: 'src', label: 'Upload Photo', widget: 'image' },
-          { name: 'caption', label: 'Caption', widget: 'string', required: false, hint: 'Optional text shown below the photo' },
-          { name: 'alt', label: 'Alt Text', widget: 'string', required: false, hint: 'Describe the image for screen readers (optional)' },
-          {
-            name: 'align', label: 'Position', widget: 'select', default: 'center',
-            hint: 'Center = full-width block. Left/Right = text flows around it.',
-            options: [
-              { label: '⬛  Center  (full-width block)',            value: 'center' },
-              { label: '◧  Float Left  (text wraps on the right)', value: 'left'   },
-              { label: '◨  Float Right  (text wraps on the left)', value: 'right'  },
-            ],
-          },
-          {
-            name: 'size', label: 'Width', widget: 'select', default: 'full',
-            hint: 'Only applies to left/right floated photos.',
-            options: [
-              { label: 'Full Width',   value: 'full'   },
-              { label: 'Large — 70%',  value: 'large'  },
-              { label: 'Medium — 50%', value: 'medium' },
-              { label: 'Small — 33%',  value: 'small'  },
-            ],
-          },
-          {
-            name: 'aspect', label: 'Crop / Aspect Ratio', widget: 'select', default: 'natural',
-            hint: 'Visually crops the photo to a specific shape.',
-            options: [
-              { label: 'Natural  (no crop)',   value: 'natural'   },
-              { label: 'Square  (1:1)',         value: 'square'    },
-              { label: 'Landscape  (16:9)',     value: 'landscape' },
-              { label: 'Portrait  (3:4)',       value: 'portrait'  },
-            ],
-          },
-        ],
-
-        pattern: /<figure class="cms-photo"[^>]*>[\s\S]*?<\/figure>/,
-
-        fromBlock: function (match) {
-          var html = match[0];
-          return {
-            src:     (html.match(/src="([^"]*)"/)                        || [])[1] || '',
-            alt:     (html.match(/alt="([^"]*)"/)                        || [])[1] || '',
-            caption: (html.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/) || [])[1] || '',
-            align:   (html.match(/data-align="([^"]*)"/)                 || [])[1] || 'center',
-            size:    (html.match(/data-size="([^"]*)"/)                  || [])[1] || 'full',
-            aspect:  (html.match(/data-aspect="([^"]*)"/)                || [])[1] || 'natural',
-          };
-        },
-
-        toBlock: function (obj) {
-          var src    = (obj.src     || '').replace(/"/g, '&quot;');
-          var alt    = (obj.alt || obj.caption || '').replace(/"/g, '&quot;');
-          var cap    = obj.caption || '';
-          var align  = obj.align  || 'center';
-          var size   = obj.size   || 'full';
-          var aspect = obj.aspect || 'natural';
-          return (
-            '<figure class="cms-photo" data-align="' + align + '" data-size="' + size + '" data-aspect="' + aspect + '">\n' +
-            '  <img src="' + src + '" alt="' + alt + '" loading="lazy" />\n' +
-            (cap ? '  <figcaption>' + cap + '</figcaption>\n' : '') +
-            '</figure>'
-          );
-        },
-
-        toPreview: function (obj, getAsset) {
-          var rawSrc = obj.src || '';
-          var src    = rawSrc ? (getAsset ? String(getAsset(rawSrc)) : rawSrc) : '';
-          var alt    = obj.alt || obj.caption || '', cap = obj.caption || '';
-          var align  = obj.align  || 'center', size = obj.size || 'full', aspect = obj.aspect || 'natural';
-          var sizeMap   = { full: '100%', large: '70%', medium: '50%', small: '33%' };
-          var aspectMap = { natural: 'unset', square: '1/1', landscape: '16/9', portrait: '3/4' };
-          var width = sizeMap[size] || '100%', ratio = aspectMap[aspect] || 'unset';
-          var figStyle = align === 'left'  ? 'float:left;width:'  + width + ';margin:0 1.75rem 1rem 0;'
-                       : align === 'right' ? 'float:right;width:' + width + ';margin:0 0 1rem 1.75rem;'
-                       :                    'display:block;max-width:' + width + ';margin:1.5rem auto;';
-          var imgStyle = 'width:100%;height:auto;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.3);display:block;margin:0;';
-          if (ratio !== 'unset') imgStyle += 'aspect-ratio:' + ratio + ';object-fit:cover;';
-          return (
-            '<figure style="' + figStyle + '">' +
-            (src
-              ? '<img src="' + src + '" alt="' + alt + '" style="' + imgStyle + '" />'
-              : '<div style="' + imgStyle + 'background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;border-radius:10px;color:#555;font-size:0.8rem;">No photo selected</div>'
-            ) +
-            (cap ? '<figcaption style="text-align:center;font-size:0.8rem;color:#888;font-style:italic;margin-top:0.4rem;">' + cap + '</figcaption>' : '') +
-            '</figure>'
-          );
-        },
-      });
-
-      // ─────────────────────────────────────────────────────────────────
-      // Editor Component: Photo Row (2–4 photos side by side)
-      //
-      // Adds a "Photo Row" button to the markdown toolbar.
-      // All photos in the row share the same crop aspect ratio.
-      // Photos beyond the selected column count are ignored.
-      // ─────────────────────────────────────────────────────────────────
-      CMS.registerEditorComponent({
-        id:      'cms-photo-row',
-        label:   'Photo Row',
-        summary: '{{fields.cols}}-column photo row',
-        fields: [
-          {
-            name: 'cols', label: 'Number of Columns', widget: 'select', default: '2',
-            hint: 'How many photos to show side by side.',
-            options: [
-              { label: '▪▪  2 Photos Side by Side', value: '2' },
-              { label: '▪▪▪  3 Photos in a Row',    value: '3' },
-              { label: '▪▪▪▪  4 Photos in a Row',   value: '4' },
-            ],
-          },
-          {
-            name: 'aspect', label: 'Crop / Aspect Ratio', widget: 'select', default: 'landscape',
-            hint: 'All photos in this row are cropped to the same shape.',
-            options: [
-              { label: 'Landscape  (16:9)', value: 'landscape' },
-              { label: 'Square  (1:1)',     value: 'square'    },
-              { label: 'Portrait  (3:4)',   value: 'portrait'  },
-              { label: 'Natural  (no crop)',value: 'natural'   },
-            ],
-          },
-          { name: 'img1', label: 'Photo 1',                                  widget: 'image'  },
-          { name: 'cap1', label: 'Caption 1', required: false,                widget: 'string' },
-          { name: 'img2', label: 'Photo 2',                                  widget: 'image'  },
-          { name: 'cap2', label: 'Caption 2', required: false,                widget: 'string' },
-          { name: 'img3', label: 'Photo 3  (3-col & 4-col only)', required: false, widget: 'image'  },
-          { name: 'cap3', label: 'Caption 3', required: false,                widget: 'string' },
-          { name: 'img4', label: 'Photo 4  (4-col only)',          required: false, widget: 'image'  },
-          { name: 'cap4', label: 'Caption 4', required: false,                widget: 'string' },
-        ],
-
-        pattern: /<div class="cms-photo-row"[^>]*>[\s\S]*?<\/div>/,
-
-        fromBlock: function (match) {
-          var html = match[0];
-          var cols   = (html.match(/data-cols="(\d+)"/)    || [])[1] || '2';
-          var aspect = (html.match(/data-aspect="([^"]*)"/) || [])[1] || 'landscape';
-          var figs = [], figRe = /<figure>([\s\S]*?)<\/figure>/g, fm;
-          while ((fm = figRe.exec(html)) !== null) {
-            var fh = fm[1];
-            figs.push({
-              src: (fh.match(/src="([^"]*)"/)                        || [])[1] || '',
-              cap: (fh.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/) || [])[1] || '',
-            });
-          }
-          return {
-            cols: cols, aspect: aspect,
-            img1: (figs[0]||{}).src||'', cap1: (figs[0]||{}).cap||'',
-            img2: (figs[1]||{}).src||'', cap2: (figs[1]||{}).cap||'',
-            img3: (figs[2]||{}).src||'', cap3: (figs[2]||{}).cap||'',
-            img4: (figs[3]||{}).src||'', cap4: (figs[3]||{}).cap||'',
-          };
-        },
-
-        toBlock: function (obj) {
-          var cols = parseInt(obj.cols || '2', 10), aspect = obj.aspect || 'landscape', rows = '';
-          for (var i = 1; i <= cols; i++) {
-            var src = (obj['img' + i] || '').replace(/"/g, '&quot;');
-            var cap = obj['cap' + i] || '';
-            if (!src) continue;
-            rows += '  <figure>\n    <img src="' + src + '" alt="' + cap.replace(/"/g, '&quot;') + '" loading="lazy" />\n' +
-                    (cap ? '    <figcaption>' + cap + '</figcaption>\n' : '') + '  </figure>\n';
-          }
-          return '<div class="cms-photo-row" data-cols="' + cols + '" data-aspect="' + aspect + '">\n' + rows + '</div>';
-        },
-
-        toPreview: function (obj, getAsset) {
-          var cols = parseInt(obj.cols || '2', 10), aspect = obj.aspect || 'landscape';
-          var aspectMap = { landscape: '16/9', square: '1/1', portrait: '3/4', natural: 'unset' };
-          var ratio = aspectMap[aspect] || '16/9';
-          var imgStyle = 'width:100%;height:auto;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,0.3);display:block;margin:0;';
-          if (ratio !== 'unset') imgStyle += 'aspect-ratio:' + ratio + ';object-fit:cover;';
-          var placeholderStyle = imgStyle + 'background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;color:#555;font-size:0.75rem;';
-          var photos = '';
-          for (var i = 1; i <= cols; i++) {
-            var rawSrc = obj['img' + i] || '', cap = obj['cap' + i] || '';
-            var src = rawSrc ? (getAsset ? String(getAsset(rawSrc)) : rawSrc) : '';
-            photos += '<figure style="margin:0;">' +
-              (src
-                ? '<img src="' + src + '" alt="' + cap + '" style="' + imgStyle + '" />'
-                : '<div style="' + placeholderStyle + '">Photo ' + i + '</div>'
-              ) +
-              (cap ? '<figcaption style="text-align:center;font-size:0.75rem;color:#888;font-style:italic;margin-top:0.35rem;">' + cap + '</figcaption>' : '') +
-              '</figure>';
-          }
-          return '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:0.75rem;margin:1.5rem 0;clear:both;">' + photos + '</div>';
-        },
-      });
     </script>
   </body>
 </html>

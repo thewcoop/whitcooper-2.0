@@ -16,50 +16,8 @@ collections:
       - { label: Cover Image, name: coverImage, widget: image, required: false }
       - label: Body
         name: body
-        widget: markdown
-        hint: "Write your post here. Use the toolbar above to format text and insert photos inline."
-        buttons:
-          - bold
-          - italic
-          - link
-          - heading-one
-          - heading-two
-          - heading-three
-          - quote
-          - bulleted-list
-          - numbered-list
-      - label: "Photo Grid — Side-by-Side Layouts"
-        name: imageGroups
-        widget: list
-        required: false
-        label_singular: "Photo Group"
-        collapsed: false
-        summary: "{{fields.layout}}"
-        hint: >
-          Use this section to display photos side by side. Add a group,
-          choose a layout (2, 3, or 4 columns), then upload your photos.
-          These appear below the body text.
-        fields:
-          - label: Layout
-            name: layout
-            widget: select
-            default: two-up
-            hint: "How many columns to show photos side by side"
-            options:
-              - { label: "▪  Full Width  (1 large photo)", value: "full" }
-              - { label: "▪▪  Side by Side  (2 photos)", value: "two-up" }
-              - { label: "▪▪▪  3 Columns  (3 photos)", value: "three-up" }
-              - { label: "▪▪▪▪  4 Columns  (4 photos)", value: "four-up" }
-          - label: Photos
-            name: images
-            widget: list
-            label_singular: "Photo"
-            collapsed: false
-            hint: "Click '+ Add Photo' to upload each photo for this group."
-            fields:
-              - { label: "Photo", name: image, widget: image }
-              - { label: "Caption", name: caption, widget: string, required: false, hint: "Short description shown below the photo (optional)" }
-              - { label: "Alt Text", name: alt, widget: string, required: false, hint: "Describe the image for screen readers (optional)" }
+        widget: block-editor
+        hint: "Use the toolbar to add text, photos, and photo grids."
   - name: portfolio
     label: Portfolio
     folder: src/content/portfolio
