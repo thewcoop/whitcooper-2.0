@@ -259,6 +259,11 @@ const { Content } = await post.render();
     margin-top: 3rem;
   }
 
+  /* Prevent the row-spacing rule from adding top margin inside grid cells */
+  :global(.prose div.cms-photo-row figure + figure) {
+    margin-top: 0;
+  }
+
   /* Photo layout groups */
   .image-group {
     display: grid;
@@ -320,62 +325,6 @@ const { Content } = await post.render();
     font-style: italic;
   }
 
-  /* ── cms-photo: single positioned photo from editor component ──────── */
-
-  .prose figure.cms-photo {
-    margin: 2rem 0;
-  }
-
-  /* Centered: full-width block, respects size via max-width */
-  .prose figure.cms-photo[data-align="center"] {
-    display: block;
-    margin-left:  auto;
-    margin-right: auto;
-  }
-  .prose figure.cms-photo[data-align="center"][data-size="full"]   { max-width: 100%; }
-  .prose figure.cms-photo[data-align="center"][data-size="large"]  { max-width: 70%;  }
-  .prose figure.cms-photo[data-align="center"][data-size="medium"] { max-width: 50%;  }
-  .prose figure.cms-photo[data-align="center"][data-size="small"]  { max-width: 33%;  }
-
-  /* Float left / right: text wraps around */
-  .prose figure.cms-photo[data-align="left"] {
-    float: left;
-    margin: 0 2rem 1.5rem 0;
-  }
-  .prose figure.cms-photo[data-align="right"] {
-    float: right;
-    margin: 0 0 1.5rem 2rem;
-  }
-  .prose figure.cms-photo[data-align="left"][data-size="full"],
-  .prose figure.cms-photo[data-align="right"][data-size="full"]   { width: 100%; }
-  .prose figure.cms-photo[data-align="left"][data-size="large"],
-  .prose figure.cms-photo[data-align="right"][data-size="large"]  { width: 70%;  }
-  .prose figure.cms-photo[data-align="left"][data-size="medium"],
-  .prose figure.cms-photo[data-align="right"][data-size="medium"] { width: 50%;  }
-  .prose figure.cms-photo[data-align="left"][data-size="small"],
-  .prose figure.cms-photo[data-align="right"][data-size="small"]  { width: 33%;  }
-
-  /* Crop / aspect ratio */
-  .prose figure.cms-photo img {
-    width: 100%;
-    height: auto;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    display: block;
-    margin: 0;
-  }
-  .prose figure.cms-photo[data-aspect="square"]    img { aspect-ratio: 1 / 1;  object-fit: cover; }
-  .prose figure.cms-photo[data-aspect="landscape"] img { aspect-ratio: 16 / 9; object-fit: cover; }
-  .prose figure.cms-photo[data-aspect="portrait"]  img { aspect-ratio: 3 / 4;  object-fit: cover; }
-
-  .prose figure.cms-photo figcaption {
-    text-align: center;
-    font-size: 0.8rem;
-    color: #888;
-    font-style: italic;
-    margin-top: 0.4rem;
-  }
-
   /* Clear floats so the next block-level element starts fresh */
   .post-content::after {
     content: '';
@@ -383,30 +332,87 @@ const { Content } = await post.render();
     clear: both;
   }
 
-  /* ── cms-photo-row: multi-column photo grid from editor component ───── */
+  /*
+   * ── cms-photo & cms-photo-row ──────────────────────────────────────────
+   * These elements come from raw HTML blocks in markdown (CMS editor
+   * components). Astro's scoped CSS does NOT add the cid attribute to raw
+   * HTML blocks, so the rules below use :global() to match them directly.
+   * ────────────────────────────────────────────────────────────────────── */
 
-  .prose div.cms-photo-row {
+  /* ── cms-photo: single positioned photo ── */
+  :global(.prose figure.cms-photo) {
+    margin: 2rem 0;
+  }
+
+  :global(.prose figure.cms-photo[data-align="center"]) {
+    display: block;
+    margin-left:  auto;
+    margin-right: auto;
+  }
+  :global(.prose figure.cms-photo[data-align="center"][data-size="full"])   { max-width: 100%; }
+  :global(.prose figure.cms-photo[data-align="center"][data-size="large"])  { max-width: 70%;  }
+  :global(.prose figure.cms-photo[data-align="center"][data-size="medium"]) { max-width: 50%;  }
+  :global(.prose figure.cms-photo[data-align="center"][data-size="small"])  { max-width: 33%;  }
+
+  :global(.prose figure.cms-photo[data-align="left"]) {
+    float: left;
+    margin: 0 2rem 1.5rem 0;
+  }
+  :global(.prose figure.cms-photo[data-align="right"]) {
+    float: right;
+    margin: 0 0 1.5rem 2rem;
+  }
+  :global(.prose figure.cms-photo[data-align="left"][data-size="full"]),
+  :global(.prose figure.cms-photo[data-align="right"][data-size="full"])   { width: 100%; }
+  :global(.prose figure.cms-photo[data-align="left"][data-size="large"]),
+  :global(.prose figure.cms-photo[data-align="right"][data-size="large"])  { width: 70%;  }
+  :global(.prose figure.cms-photo[data-align="left"][data-size="medium"]),
+  :global(.prose figure.cms-photo[data-align="right"][data-size="medium"]) { width: 50%;  }
+  :global(.prose figure.cms-photo[data-align="left"][data-size="small"]),
+  :global(.prose figure.cms-photo[data-align="right"][data-size="small"])  { width: 33%;  }
+
+  :global(.prose figure.cms-photo img) {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: block;
+    margin: 0;
+  }
+  :global(.prose figure.cms-photo[data-aspect="square"] img)    { aspect-ratio: 1 / 1;  object-fit: cover; }
+  :global(.prose figure.cms-photo[data-aspect="landscape"] img) { aspect-ratio: 16 / 9; object-fit: cover; }
+  :global(.prose figure.cms-photo[data-aspect="portrait"] img)  { aspect-ratio: 3 / 4;  object-fit: cover; }
+
+  :global(.prose figure.cms-photo figcaption) {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #888;
+    font-style: italic;
+    margin-top: 0.4rem;
+  }
+
+  /* ── cms-photo-row: multi-column photo grid ── */
+  :global(.prose div.cms-photo-row) {
     display: grid;
     gap: 0.75rem;
     margin: 2rem 0;
     clear: both;
   }
-  .prose div.cms-photo-row[data-cols="2"] { grid-template-columns: 1fr 1fr; }
-  .prose div.cms-photo-row[data-cols="3"] { grid-template-columns: 1fr 1fr 1fr; }
-  .prose div.cms-photo-row[data-cols="4"] { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  :global(.prose div.cms-photo-row[data-cols="2"]) { grid-template-columns: 1fr 1fr; }
+  :global(.prose div.cms-photo-row[data-cols="3"]) { grid-template-columns: 1fr 1fr 1fr; }
+  :global(.prose div.cms-photo-row[data-cols="4"]) { grid-template-columns: 1fr 1fr 1fr 1fr; }
 
   @media (max-width: 640px) {
-    .prose div.cms-photo-row[data-cols="3"],
-    .prose div.cms-photo-row[data-cols="4"] {
-      grid-template-columns: 1fr 1fr;
+    :global(.prose div.cms-photo-row) {
+      grid-template-columns: 1fr !important;
     }
   }
 
-  .prose div.cms-photo-row figure {
+  :global(.prose div.cms-photo-row figure) {
     margin: 0;
   }
 
-  .prose div.cms-photo-row img {
+  :global(.prose div.cms-photo-row img) {
     width: 100%;
     height: auto;
     border-radius: 10px;
@@ -415,12 +421,11 @@ const { Content } = await post.render();
     margin: 0;
   }
 
-  /* Crop / aspect ratio for rows */
-  .prose div.cms-photo-row[data-aspect="landscape"] img { aspect-ratio: 16 / 9; object-fit: cover; }
-  .prose div.cms-photo-row[data-aspect="square"]    img { aspect-ratio: 1 / 1;  object-fit: cover; }
-  .prose div.cms-photo-row[data-aspect="portrait"]  img { aspect-ratio: 3 / 4;  object-fit: cover; }
+  :global(.prose div.cms-photo-row[data-aspect="landscape"] img) { aspect-ratio: 16 / 9; object-fit: cover; }
+  :global(.prose div.cms-photo-row[data-aspect="square"] img)    { aspect-ratio: 1 / 1;  object-fit: cover; }
+  :global(.prose div.cms-photo-row[data-aspect="portrait"] img)  { aspect-ratio: 3 / 4;  object-fit: cover; }
 
-  .prose div.cms-photo-row figcaption {
+  :global(.prose div.cms-photo-row figcaption) {
     text-align: center;
     font-size: 0.75rem;
     color: #888;
