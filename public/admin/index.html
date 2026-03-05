@@ -333,6 +333,7 @@
       // ════════════════════════════════════════════════════════════════════════
       var REPO         = 'thewcoop/whitcooper-2.0';  // GitHub owner/repo
       var UPLOADS_PATH = 'public/uploads';            // repo-relative upload folder
+      var BRANCH       = 'main';                      // target branch
 
       // ════════════════════════════════════════════════════════════════════════
       // UTILITIES
@@ -409,36 +410,57 @@
 
       // ════════════════════════════════════════════════════════════════════════
       // NETLIFY GIT GATEWAY UPLOAD
+      // Uses the Git Data API (blobs → trees → commits → ref update) because
+      // the Contents API is restricted by the git-gateway security layer.
       // ════════════════════════════════════════════════════════════════════════
       function uploadViaGitGateway(base64Data, filename) {
-        return window.netlifyIdentity.refresh().then(function(token) {
-          var url = '/.netlify/git/github/repos/' + REPO + '/contents/' + UPLOADS_PATH + '/' + filename;
-          var headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
-          var body = JSON.stringify({ message: 'Upload ' + filename + ' via CMS', content: base64Data });
+        var api     = '/.netlify/git/github/repos/' + REPO;
+        var filePath = UPLOADS_PATH + '/' + filename;
+        var token;
 
-          return fetch(url, { method: 'PUT', headers: headers, body: body }).then(function(resp) {
-            // 422 = file already exists → need sha to update
-            if (resp.status === 422) {
-              return fetch(url, { headers: { 'Authorization': 'Bearer ' + token } })
-                .then(function(r) { return r.json(); })
-                .then(function(existing) {
-                  var updateBody = JSON.stringify({
-                    message: 'Update ' + filename + ' via CMS',
-                    content: base64Data,
-                    sha: existing.sha,
+        function json(resp) {
+          if (!resp.ok) return resp.text().then(function(t) { throw new Error('Git API error (' + resp.status + '): ' + t); });
+          return resp.json();
+        }
+        function get(path)         { return fetch(api + path, { headers: { 'Authorization': 'Bearer ' + token } }).then(json); }
+        function post(path, body)  { return fetch(api + path, { method: 'POST',  headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(json); }
+        function patch(path, body) { return fetch(api + path, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(json); }
+
+        return window.netlifyIdentity.refresh()
+          .then(function(t) {
+            token = t;
+            // 1. Create blob
+            return post('/git/blobs', { content: base64Data, encoding: 'base64' });
+          })
+          .then(function(blob) {
+            // 2. Get current branch tip
+            return get('/git/refs/heads/' + BRANCH).then(function(ref) {
+              var commitSha = ref.object.sha;
+              // 3. Get the commit to find the tree SHA
+              return get('/git/commits/' + commitSha).then(function(commit) {
+                // 4. Create new tree with the uploaded file
+                return post('/git/trees', {
+                  base_tree: commit.tree.sha,
+                  tree: [{ path: filePath, mode: '100644', type: 'blob', sha: blob.sha }],
+                }).then(function(newTree) {
+                  // 5. Create commit
+                  return post('/git/commits', {
+                    message: 'Upload ' + filename + ' via CMS',
+                    parents: [commitSha],
+                    tree: newTree.sha,
+                  }).then(function(newCommit) {
+                    // 6. Update branch ref
+                    return patch('/git/refs/heads/' + BRANCH, { sha: newCommit.sha });
                   });
-                  return fetch(url, { method: 'PUT', headers: headers, body: updateBody });
                 });
-            }
-            return resp;
-          }).then(function(resp) {
-            if (!resp.ok) return resp.text().then(function(t) { throw new Error('Upload failed (' + resp.status + '): ' + t); });
-            return '/uploads/' + filename;
+              });
+            });
+          })
+          .then(function() { return '/uploads/' + filename; })
+          .catch(function(err) {
+            if (err && err.message) throw err;
+            throw new Error('Upload failed. Please try again.');
           });
-        }).catch(function(err) {
-          if (err && err.message && err.message.includes('Upload failed')) throw err;
-          throw new Error('Auth error — please refresh and log in again. (' + (err && err.message || err) + ')');
-        });
       }
 
       // ════════════════════════════════════════════════════════════════════════
