@@ -6,9 +6,9 @@ summary: A collection of black-and-white photos from my trip to Tokyo, taken
 coverImage: /uploads/dscf4520_instagram-post_1080x1350_u_110_p3_gainmap.jpg
 inlineImages: []
 ---
-![Random street near Nakano Broadway, a large shopping building.](/uploads/dscf4589_instagram-post_1080x1350_u_110_p3_gainmap.jpg "Nakano")
+<p><img src="/uploads/dscf4589_instagram-post_1080x1350_u_110_p3_gainmap.jpg" alt="Random street near Nakano Broadway, a large shopping building." title="Nakano"></p>
 
-A cool street detail not far from Nakano Broadway. Right nearby Tototo Pizza.
+<p>A cool street detail not far from Nakano Broadway. Right nearby Tototo Pizza.</p>
 
 <div class="cms-photo-row" data-cols="2" data-aspect="portrait">
   <figure>
