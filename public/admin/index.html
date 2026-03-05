@@ -257,6 +257,58 @@
       .wc-menu-icon { font-size: 0.95em; width: 20px; text-align: center; flex-shrink: 0; }
       .wc-menu-sep { height: 1px; background: rgba(255,255,255,0.08); margin: 4px 0; }
 
+      /* ── Upload preview overlay ── */
+      .wc-upload-overlay {
+        position: fixed; inset: 0; z-index: 500;
+        background: rgba(0,0,0,0.9);
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        padding: 24px; gap: 18px;
+      }
+      .wc-upload-title {
+        font-size: 0.78rem; color: #888;
+        text-transform: uppercase; letter-spacing: 0.1em;
+      }
+      .wc-upload-preview-img {
+        max-width: min(90vw, 600px); max-height: 55vh;
+        border-radius: 12px; object-fit: contain;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+        display: block;
+      }
+      .wc-rotate-btns { display: flex; gap: 10px; }
+      .wc-rotate-btn {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: #ccc; border-radius: 7px;
+        padding: 8px 18px; font-size: 0.85rem;
+        font-family: inherit; cursor: pointer;
+        transition: background 0.15s;
+      }
+      .wc-rotate-btn:hover { background: rgba(255,255,255,0.18); }
+      .wc-rotate-btn:disabled { opacity: 0.4; cursor: default; }
+      .wc-upload-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+      .wc-upload-confirm-btn {
+        background: rgba(251,191,36,0.15);
+        border: 1px solid rgba(251,191,36,0.5);
+        color: #fbbf24; border-radius: 8px;
+        padding: 10px 28px; font-size: 0.9rem;
+        font-family: inherit; cursor: pointer;
+        transition: background 0.15s;
+      }
+      .wc-upload-confirm-btn:hover { background: rgba(251,191,36,0.25); }
+      .wc-upload-confirm-btn:disabled { opacity: 0.5; cursor: default; }
+      .wc-upload-cancel-btn {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.15);
+        color: #888; border-radius: 8px;
+        padding: 10px 20px; font-size: 0.9rem;
+        font-family: inherit; cursor: pointer;
+      }
+      .wc-upload-error {
+        color: #ef4444; font-size: 0.82rem;
+        text-align: center; max-width: 420px; line-height: 1.5;
+      }
+
       /* mobile: always show handles */
       @media (max-width: 640px) {
         .wc-block-handle, .wc-block-del { opacity: 0.5; }
@@ -266,6 +318,9 @@
   </head>
 
   <body>
+    <!-- Hidden file input for photo uploads -->
+    <input id="wc-file-input" type="file" accept="image/*" style="display:none">
+
     <!-- marked.js for parsing existing markdown content on load -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
@@ -274,6 +329,12 @@
 
     <script>
       // ════════════════════════════════════════════════════════════════════════
+      // CONFIGURATION
+      // ════════════════════════════════════════════════════════════════════════
+      var REPO         = 'thewcoop/whitcooper-2.0';  // GitHub owner/repo
+      var UPLOADS_PATH = 'public/uploads';            // repo-relative upload folder
+
+      // ════════════════════════════════════════════════════════════════════════
       // UTILITIES
       // ════════════════════════════════════════════════════════════════════════
       var _uid = 0;
@@ -281,6 +342,103 @@
 
       function esc(s) {
         return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function slugify(name) {
+        return name.replace(/\.[^.]+$/, '').toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'photo';
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // IMAGE HELPERS  (Canvas API — no external libraries needed)
+      // ════════════════════════════════════════════════════════════════════════
+
+      // Resize image file to max MAX_PX on longest side, return canvas
+      function compressImage(file, callback) {
+        var MAX = 1600;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var img = new Image();
+          img.onload = function() {
+            var w = img.width, h = img.height;
+            if (w > MAX || h > MAX) {
+              if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+              else        { w = Math.round(w * MAX / h); h = MAX; }
+            }
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            callback(canvas, file.name);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // Return a new canvas rotated by degrees (90/180/270)
+      function getRotatedCanvas(orig, degrees) {
+        var d = ((degrees % 360) + 360) % 360;
+        if (d === 0) return orig;
+        var swap = (d === 90 || d === 270);
+        var nw = swap ? orig.height : orig.width;
+        var nh = swap ? orig.width  : orig.height;
+        var c2 = document.createElement('canvas');
+        c2.width = nw; c2.height = nh;
+        var ctx = c2.getContext('2d');
+        ctx.translate(nw / 2, nh / 2);
+        ctx.rotate(d * Math.PI / 180);
+        ctx.drawImage(orig, -orig.width / 2, -orig.height / 2);
+        return c2;
+      }
+
+      // Export canvas as base64 (WebP preferred, JPEG fallback for Safari)
+      function canvasToBase64(canvas) {
+        var url = canvas.toDataURL('image/webp', 0.85);
+        if (!url.startsWith('data:image/webp')) url = canvas.toDataURL('image/jpeg', 0.85);
+        return url.split(',')[1];
+      }
+
+      function canvasExt(canvas) {
+        return canvas.toDataURL('image/webp', 0.85).startsWith('data:image/webp') ? 'webp' : 'jpg';
+      }
+
+      // Small JPEG preview src for the rotation UI (no need for full quality)
+      function previewSrc(canvas) {
+        return canvas.toDataURL('image/jpeg', 0.75);
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      // NETLIFY GIT GATEWAY UPLOAD
+      // ════════════════════════════════════════════════════════════════════════
+      function uploadViaGitGateway(base64Data, filename) {
+        return window.netlifyIdentity.refresh().then(function(token) {
+          var url = '/.netlify/git/github/repos/' + REPO + '/contents/' + UPLOADS_PATH + '/' + filename;
+          var headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+          var body = JSON.stringify({ message: 'Upload ' + filename + ' via CMS', content: base64Data });
+
+          return fetch(url, { method: 'PUT', headers: headers, body: body }).then(function(resp) {
+            // 422 = file already exists → need sha to update
+            if (resp.status === 422) {
+              return fetch(url, { headers: { 'Authorization': 'Bearer ' + token } })
+                .then(function(r) { return r.json(); })
+                .then(function(existing) {
+                  var updateBody = JSON.stringify({
+                    message: 'Update ' + filename + ' via CMS',
+                    content: base64Data,
+                    sha: existing.sha,
+                  });
+                  return fetch(url, { method: 'PUT', headers: headers, body: updateBody });
+                });
+            }
+            return resp;
+          }).then(function(resp) {
+            if (!resp.ok) return resp.text().then(function(t) { throw new Error('Upload failed (' + resp.status + '): ' + t); });
+            return '/uploads/' + filename;
+          });
+        }).catch(function(err) {
+          if (err && err.message && err.message.includes('Upload failed')) throw err;
+          throw new Error('Auth error — please refresh and log in again. (' + (err && err.message || err) + ')');
+        });
       }
 
       // ════════════════════════════════════════════════════════════════════════
@@ -354,7 +512,6 @@
 
       function parseContent(raw) {
         if (!raw || !raw.trim()) return [];
-        // Detect markdown vs HTML by checking first meaningful line
         var firstLine = raw.trim().split('\n')[0];
         var looksMarkdown = /^#{1,6}\s/.test(firstLine) ||
           (!/<[a-z]/i.test(firstLine) && /\*\*|\[.+\]\(|!\[/.test(raw));
@@ -364,7 +521,6 @@
 
       // ════════════════════════════════════════════════════════════════════════
       // ContentEditable sub-component
-      // Prevents React from wiping innerHTML on re-render while user is typing
       // ════════════════════════════════════════════════════════════════════════
       var CE = createClass({
         shouldComponentUpdate: function(np) {
@@ -385,7 +541,7 @@
             suppressContentEditableWarning: true,
             'data-placeholder': p.placeholder,
             ref: function(el) { self._el = el; },
-            onInput:  function(e) { if (p.onChange) p.onChange(e.currentTarget.innerHTML); },
+            onInput:   function(e) { if (p.onChange) p.onChange(e.currentTarget.innerHTML); },
             onKeyDown: p.onKeyDown,
             onFocus:   p.onFocus,
             onBlur:    p.onBlur,
@@ -400,59 +556,55 @@
 
         getInitialState: function() {
           return {
-            blocks:        [],
-            showMenu:      false,
-            activeBlock:   null,
-            pendingMedia:  null,   // { blockId, slotIndex|null }
-            dragBlock:     null,
-            dragOver:      null,
+            blocks:         [],
+            showMenu:       false,
+            activeBlock:    null,
+            pendingMedia:   null,    // { blockId, slotIndex|null } — waiting for file selection
+            pendingPreview: null,    // { blockId, slotIndex, origCanvas, origName, rotation, previewSrc, uploading, error }
+            dragBlock:      null,
+            dragOver:       null,
           };
         },
 
         componentDidMount: function() {
-          var raw    = this.props.value || '';
-          var blocks = parseContent(raw);
+          var self = this;
+
+          // ── Attach file input listener (once per page) ──
+          var input = document.getElementById('wc-file-input');
+          if (input) {
+            input.addEventListener('change', function(e) {
+              var file = e.target.files && e.target.files[0];
+              input.value = '';  // reset so same file can be re-selected
+              if (!file || !self.state.pendingMedia) return;
+              compressImage(file, function(canvas, origName) {
+                var pm = self.state.pendingMedia;
+                self.setState({
+                  pendingMedia:   null,
+                  pendingPreview: {
+                    blockId:    pm.blockId,
+                    slotIndex:  pm.slotIndex,
+                    origCanvas: canvas,
+                    origName:   origName || 'photo.jpg',
+                    rotation:   0,
+                    previewSrc: previewSrc(canvas),
+                    uploading:  false,
+                    error:      null,
+                  },
+                });
+              });
+            });
+          }
+
+          // ── Parse initial content ──
+          var blocks = parseContent(this.props.value || '');
           if (!blocks.length) blocks = [{ id: uid(), type: 'paragraph', html: '' }];
           this.setState({ blocks: blocks });
         },
 
         componentDidUpdate: function(prevProps, prevState) {
-          var self = this;
-
-          // ── Handle media library result ──
-          var pm = self.state.pendingMedia;
-          if (pm && self.props.mediaPaths) {
-            var cid = pm.slotIndex != null
-              ? ('wc-pr-' + pm.blockId + '-' + pm.slotIndex)
-              : ('wc-ph-' + pm.blockId);
-            var mp     = self.props.mediaPaths;
-            var pmp    = prevProps.mediaPaths;
-            var newPath = mp  && mp.get  ? mp.get(cid)  : (mp  || {})[cid];
-            var oldPath = pmp && pmp.get ? pmp.get(cid) : (pmp || {})[cid];
-
-            if (newPath && newPath !== oldPath) {
-              var bid = pm.blockId, si = pm.slotIndex;
-              self.setState({ pendingMedia: null }, function() {
-                if (si != null) {
-                  var blk = self.state.blocks.find(function(b) { return b.id === bid; });
-                  if (blk) {
-                    var photos = (blk.photos || []).slice();
-                    photos[si] = Object.assign({}, photos[si] || {}, { src: newPath });
-                    self._upd(bid, { photos: photos });
-                  }
-                } else {
-                  self._upd(bid, { src: newPath });
-                }
-              });
-              try {
-                if (self.props.clearMediaControl) self.props.clearMediaControl({ id: cid });
-              } catch(e) {}
-            }
-          }
-
-          // ── Emit HTML when blocks change ──
-          if (prevState.blocks !== self.state.blocks) {
-            self.props.onChange(blocksToHtml(self.state.blocks));
+          // Emit HTML when blocks change
+          if (prevState.blocks !== this.state.blocks) {
+            this.props.onChange(blocksToHtml(this.state.blocks));
           }
         },
 
@@ -485,36 +637,75 @@
           self.setState(function(s) {
             return { blocks: s.blocks.concat([b]), showMenu: false };
           }, function() {
-            // For photo blocks, immediately open media library
             if (b.type === 'photo') self._openMedia(b.id, null);
           });
         },
 
-        // ── Media library ──
+        // ── Trigger file picker ──
         _openMedia: function(blockId, slotIndex) {
-          var self  = this;
-          var cid   = slotIndex != null ? ('wc-pr-' + blockId + '-' + slotIndex) : ('wc-ph-' + blockId);
-          self.setState({ pendingMedia: { blockId: blockId, slotIndex: slotIndex } });
-          try {
-            if (!self.props.openMediaLibrary) throw new Error('no openMediaLibrary');
-            self.props.openMediaLibrary({ controlID: cid, allowMultiple: false });
-          } catch(e) {
-            // Graceful fallback: prompt for URL
-            var url = window.prompt('Paste the image path (upload via Media section first)\ne.g. /uploads/photo.jpg');
-            if (url) {
-              if (slotIndex != null) {
-                var blk = self.state.blocks.find(function(b) { return b.id === blockId; });
-                if (blk) {
-                  var photos = (blk.photos || []).slice();
-                  photos[slotIndex] = Object.assign({}, photos[slotIndex] || {}, { src: url });
-                  self._upd(blockId, { photos: photos });
-                }
-              } else {
-                self._upd(blockId, { src: url });
+          this.setState({ pendingMedia: { blockId: blockId, slotIndex: slotIndex }, pendingPreview: null });
+          var input = document.getElementById('wc-file-input');
+          if (input) input.click();
+        },
+
+        // ── Rotate the pending preview ──
+        _rotate: function(deg) {
+          this.setState(function(s) {
+            if (!s.pendingPreview) return {};
+            var newRot = ((s.pendingPreview.rotation + deg) % 360 + 360) % 360;
+            var rotCanvas = getRotatedCanvas(s.pendingPreview.origCanvas, newRot);
+            return {
+              pendingPreview: Object.assign({}, s.pendingPreview, {
+                rotation:   newRot,
+                previewSrc: previewSrc(rotCanvas),
+              }),
+            };
+          });
+        },
+
+        // ── Upload the previewed photo ──
+        _confirmUpload: function() {
+          var self = this;
+          var pp = self.state.pendingPreview;
+          if (!pp || pp.uploading) return;
+
+          var rotCanvas = getRotatedCanvas(pp.origCanvas, pp.rotation);
+          var base64    = canvasToBase64(rotCanvas);
+          var ext       = canvasExt(rotCanvas);
+          var filename  = slugify(pp.origName) + '-' + Date.now() + '.' + ext;
+
+          self.setState(function(s) {
+            return { pendingPreview: Object.assign({}, s.pendingPreview, { uploading: true, error: null }) };
+          });
+
+          uploadViaGitGateway(base64, filename).then(function(src) {
+            var bid = pp.blockId, si = pp.slotIndex;
+            self.setState({ pendingPreview: null });
+            if (si != null) {
+              var blk = self.state.blocks.find(function(b) { return b.id === bid; });
+              if (blk) {
+                var photos = (blk.photos || []).slice();
+                photos[si] = Object.assign({}, photos[si] || {}, { src: src });
+                self._upd(bid, { photos: photos });
               }
+            } else {
+              self._upd(bid, { src: src });
             }
-            self.setState({ pendingMedia: null });
-          }
+          }).catch(function(err) {
+            self.setState(function(s) {
+              return {
+                pendingPreview: Object.assign({}, s.pendingPreview, {
+                  uploading: false,
+                  error: err.message || 'Upload failed. Try again.',
+                }),
+              };
+            });
+          });
+        },
+
+        // ── Cancel preview ──
+        _cancelPreview: function() {
+          this.setState({ pendingPreview: null, pendingMedia: null });
         },
 
         // ── Text formatting ──
@@ -587,21 +778,58 @@
             return { blocks: bs, dragBlock: null, dragOver: null };
           });
         },
-        _dragEnd:   function() { this.setState({ dragBlock: null, dragOver: null }); },
+        _dragEnd: function() { this.setState({ dragBlock: null, dragOver: null }); },
 
         // ════════════════════════════════════
         // RENDER HELPERS
         // ════════════════════════════════════
 
+        _renderUploadOverlay: function() {
+          var self = this;
+          var pp   = self.state.pendingPreview;
+          if (!pp) return null;
+
+          return h('div', { className: 'wc-upload-overlay' },
+            h('div', { className: 'wc-upload-title' }, 'Photo Preview — adjust before uploading'),
+            h('img', { className: 'wc-upload-preview-img', src: pp.previewSrc, alt: 'Preview' }),
+            h('div', { className: 'wc-rotate-btns' },
+              h('button', {
+                className: 'wc-rotate-btn', disabled: pp.uploading,
+                onClick: function() { self._rotate(-90); },
+              }, '↺  Rotate Left'),
+              h('button', {
+                className: 'wc-rotate-btn', disabled: pp.uploading,
+                onClick: function() { self._rotate(90); },
+              }, '↻  Rotate Right'),
+            ),
+            pp.error && h('div', { className: 'wc-upload-error' }, '⚠  ' + pp.error),
+            h('div', { className: 'wc-upload-actions' },
+              h('button', {
+                className: 'wc-upload-confirm-btn', disabled: pp.uploading,
+                onClick: self._confirmUpload.bind(self),
+              }, pp.uploading ? 'Uploading...' : '✓  Use this photo'),
+              h('button', {
+                className: 'wc-upload-cancel-btn', disabled: pp.uploading,
+                onClick: self._cancelPreview.bind(self),
+              }, 'Cancel'),
+            ),
+          );
+        },
+
         _renderPhotoBlock: function(block) {
           var self = this;
-          var aspectStyle = { natural: {}, square: { aspectRatio: '1/1', objectFit: 'cover' }, landscape: { aspectRatio: '16/9', objectFit: 'cover' }, portrait: { aspectRatio: '3/4', objectFit: 'cover' } }[block.aspect || 'natural'] || {};
+          var aspectStyle = {
+            natural:   {},
+            square:    { aspectRatio: '1/1',  objectFit: 'cover' },
+            landscape: { aspectRatio: '16/9', objectFit: 'cover' },
+            portrait:  { aspectRatio: '3/4',  objectFit: 'cover' },
+          }[block.aspect || 'natural'] || {};
 
           return h('div', { className: 'wc-photo-block' },
             block.src
               ? h('img', { src: block.src, alt: block.alt || block.caption || '', style: Object.assign({ maxHeight: '420px', width: '100%' }, aspectStyle) })
               : h('div', { className: 'wc-photo-placeholder', onClick: function() { self._openMedia(block.id, null); } },
-                  h('span', null, '📷'), h('span', null, 'Click to upload photo')),
+                  h('span', null, '📷'), h('span', null, 'Click to choose photo')),
             block.src && h('button', { className: 'wc-change-btn', onClick: function() { self._openMedia(block.id, null); } }, '↺  Change photo'),
             h('div', { className: 'wc-photo-controls' },
               h('span', { className: 'wc-ctrl-label' }, 'Align'),
@@ -620,13 +848,19 @@
         },
 
         _renderPhotoRowBlock: function(block) {
-          var self  = this;
-          var cols  = parseInt(block.cols || '2', 10);
-          var aspect = block.aspect || 'portrait';
-          var photos = (block.photos || []).slice();
+          var self    = this;
+          var cols    = parseInt(block.cols || '2', 10);
+          var aspect  = block.aspect || 'portrait';
+          var photos  = (block.photos || []).slice();
           while (photos.length < cols) photos.push({ src: '', caption: '' });
           photos = photos.slice(0, cols);
-          var aspectStyle = { landscape: { aspectRatio: '16/9', objectFit: 'cover', width: '100%' }, square: { aspectRatio: '1/1', objectFit: 'cover', width: '100%' }, portrait: { aspectRatio: '3/4', objectFit: 'cover', width: '100%' }, natural: { width: '100%', height: 'auto' } }[aspect] || {};
+
+          var aspectStyle = {
+            landscape: { aspectRatio: '16/9', objectFit: 'cover', width: '100%' },
+            square:    { aspectRatio: '1/1',  objectFit: 'cover', width: '100%' },
+            portrait:  { aspectRatio: '3/4',  objectFit: 'cover', width: '100%' },
+            natural:   { width: '100%', height: 'auto' },
+          }[aspect] || {};
           var placeholderStyle = { aspectRatio: aspectStyle.aspectRatio || '4/3', minHeight: '80px' };
 
           return h('div', { className: 'wc-photo-row-block' },
@@ -646,7 +880,12 @@
             h('div', { className: 'wc-photo-controls', style: { marginTop: '8px' } },
               h('span', { className: 'wc-ctrl-label' }, 'Columns'),
               h('select', { className: 'wc-ctrl-select', value: block.cols || '2',
-                onChange: function(e) { var n = parseInt(e.target.value, 10); var ps = (block.photos||[]).slice(); while(ps.length<n) ps.push({src:'',caption:''}); self._upd(block.id, { cols: e.target.value, photos: ps }); } },
+                onChange: function(e) {
+                  var n = parseInt(e.target.value, 10);
+                  var ps = (block.photos || []).slice();
+                  while (ps.length < n) ps.push({ src: '', caption: '' });
+                  self._upd(block.id, { cols: e.target.value, photos: ps });
+                } },
                 h('option', { value: '2' }, '2 photos'), h('option', { value: '3' }, '3 photos'), h('option', { value: '4' }, '4 photos')),
               h('span', { className: 'wc-ctrl-label' }, 'Crop'),
               h('select', { className: 'wc-ctrl-select', value: block.aspect || 'portrait',
@@ -657,7 +896,7 @@
         },
 
         _renderBlock: function(block) {
-          var self = this;
+          var self   = this;
           var isOver = self.state.dragOver === block.id;
 
           return h('div', {
@@ -699,7 +938,6 @@
                 html: '<ul>' + (block.html || '<li></li>') + '</ul>',
                 placeholder: 'List item...',
                 onChange: function(v) {
-                  // Strip wrapping <ul> that execCommand may add
                   var clean = v.replace(/^<ul[^>]*>|<\/ul>$/gi, '');
                   self._upd(block.id, { html: clean });
                 },
@@ -717,7 +955,6 @@
         // ════════════════════════════════════
         render: function() {
           var self = this;
-          var activeId = self.state.activeBlock;
 
           return h('div', {
             className: 'wc-editor',
@@ -725,6 +962,9 @@
               if (!e.target.closest('.wc-add-area')) self.setState({ showMenu: false });
             },
           },
+            // ── Upload preview overlay (shown when file is selected) ──
+            self._renderUploadOverlay(),
+
             // ── Sticky format toolbar ──
             h('div', { className: 'wc-format-toolbar' },
               h('button', { className: 'wc-tb-btn', title: 'Bold (select text first)',   onMouseDown: self._fmt('bold')   }, h('strong', null, 'B')),
