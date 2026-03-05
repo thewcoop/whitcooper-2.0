@@ -29,3 +29,7 @@ inlineImages: []
     <img src="/uploads/dscf4660_instagram-post_1080x1350_u_110_p3_gainmap.jpg" alt="" loading="lazy" />
   </figure>
 </div>
+
+<figure class="cms-photo" data-align="center" data-size="full" data-aspect="natural">
+  <img src="/uploads/dscf4120-instagram-post-1080x1350-u-110-p3-gainmap-1772679758033.webp" alt="" loading="lazy" />
+</figure>
