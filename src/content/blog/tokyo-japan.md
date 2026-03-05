@@ -38,5 +38,6 @@ inlineImages: []
 </figure>
 
 <figure class="cms-photo" data-align="center" data-size="full" data-aspect="natural">
-  <img src="" alt="" loading="lazy" />
+  <img src="/uploads/dscf4082-instagram-post-1080x1350-u-110-p3-gainmap-1772680411965.webp" alt="Kiddo watching the clouds go by, probably after peeing in the waterfall exhibit at Teamlab Planets." loading="lazy" />
+  <figcaption>Kiddo watching the clouds go by, probably after peeing in the waterfall exhibit at Teamlab Planets.</figcaption>
 </figure>
