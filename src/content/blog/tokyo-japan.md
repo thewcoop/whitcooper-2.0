@@ -36,3 +36,7 @@ inlineImages: []
 <figure class="cms-photo" data-align="center" data-size="full" data-aspect="natural">
   <img src="" alt="" loading="lazy" />
 </figure>
+
+<figure class="cms-photo" data-align="center" data-size="full" data-aspect="natural">
+  <img src="" alt="" loading="lazy" />
+</figure>
