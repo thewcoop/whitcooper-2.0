@@ -65,7 +65,7 @@ const gl = canvas.getContext('webgl', { antialias: false, alpha: false });
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Tunable look. The Tune panel edits these live; "Copy my settings" sends them back to Claude.
-const T = { size: 1, rise: 1, merge: 1.8, bend: 1, dispersion: 0.048, rim: 0.05, gloss: 0.5, glint: 0.1, soft: 0.5, warp: 0.5, reach: 0.22, grain: 0.06 };
+const T = { size: 1.15, rise: 1, merge: 2, bend: 1.4, dispersion: 0.043, rim: 0, gloss: 0.1, glint: 0.04, soft: 0.4, warp: 0.55, reach: 0.15, grain: 0.05 };
 const RANGES = {
   size: [0.5, 1.8, 0.05, 'Orb size'], rise: [0, 2.5, 0.05, 'Rise speed'], merge: [1.3, 2.6, 0.05, 'Gooeyness (merging)'],
   bend: [0, 2.5, 0.05, 'Glass bend'], dispersion: [0, 0.07, 0.001, 'Rainbow spread'], rim: [0, 1.6, 0.05, 'Glass rim glow'],
