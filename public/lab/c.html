@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>C · Prism Stage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/lab/lab.css" />
+<style>
+  #gl { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
+  main { position: relative; z-index: 2; }
+  .hero { min-height: 100svh; display: grid; place-content: center; padding: 90px 22px 60px; text-align: left; max-width: 1180px; margin: 0 auto; }
+  .hero h1 { margin: 0; font-size: clamp(44px, 10.5vw, 150px); line-height: .92; letter-spacing: -.05em; font-weight: 800; }
+  .hero h1 span { display: block; }
+  .hero h1 .thin { font-weight: 300; }
+  .hero p { margin: 28px 0 0; max-width: 30em; font-size: clamp(16px, 2vw, 21px); font-weight: 300; color: #d8d8dd; }
+  .hero .cta { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display: inline-flex; padding: 13px 22px; border-radius: 999px; text-decoration: none; border: 1px solid rgba(255,255,255,.4); background: rgba(0,0,0,.35); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform .25s, background .25s; }
+  .btn.solid { background: #fff; color: #000; font-weight: 600; border-color: #fff; }
+  .btn:hover { transform: translateY(-2px); text-shadow: -2px 0 rgba(255,42,95,.9), 2px 0 rgba(41,182,255,.9); }
+  section.blk { max-width: 1180px; margin: 0 auto; padding: 70px 22px; }
+  .glass { background: rgba(8,8,10,.55); border: 1px solid rgba(255,255,255,.16); border-radius: 22px; backdrop-filter: blur(22px) saturate(1.3); -webkit-backdrop-filter: blur(22px) saturate(1.3); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), -2px 0 0 rgba(255,42,95,.18), 2px 0 0 rgba(41,182,255,.18); }
+  h2 { font-size: 13px; letter-spacing: .24em; text-transform: uppercase; color: var(--mut); font-weight: 500; margin: 0 0 22px; }
+  .rail { display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; scrollbar-width: none; }
+  .rail::-webkit-scrollbar { display: none; }
+  .pcard { flex: 0 0 min(440px, 82vw); scroll-snap-align: start; text-decoration: none; padding: 12px; display: grid; gap: 12px; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+  .pcard:hover { transform: translateY(-6px); }
+  .pcard .ca-img { aspect-ratio: 16/10; border-radius: 14px; }
+  .pcard h3 { margin: 0 12px; font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+  .pcard p { margin: 0 12px 10px; color: #b8b8be; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { padding: 12px 20px; border-radius: 999px; font-size: 18px; font-weight: 500; cursor: pointer; border: 1px solid rgba(255,255,255,.22); background: rgba(8,8,10,.55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); color: #fff; transition: transform .3s cubic-bezier(.2,.9,.3,1.5), background .25s, color .25s; }
+  .chip:hover { transform: translateY(-3px) rotate(-1.5deg); }
+  .chip[aria-pressed="true"] { background: #fff; color: #000; }
+  #skillcard { margin-top: 18px; padding: 22px 26px; min-height: 96px; }
+  #skillcard b { display: block; font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 4px; }
+  #skillcard span { color: #c5c5ca; }
+  .plist { display: grid; gap: 12px; }
+  .prow { display: grid; grid-template-columns: 84px 1fr auto; gap: 16px; align-items: center; padding: 12px; text-decoration: none; transition: transform .3s; }
+  .prow:hover { transform: translateX(6px); }
+  .prow .ca-img { width: 84px; height: 84px; border-radius: 12px; }
+  .prow h3 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+  .prow p { margin: 2px 0 0; color: #b8b8be; font-size: 14px; }
+  .prow time { color: var(--mut); font-size: 13px; }
+  footer { text-align: center; padding: 50px 22px 120px; color: var(--mut); font-size: 14px; }
+</style>
+</head>
+<body data-proto="c">
+<canvas id="gl"></canvas>
+<main>
+  <div class="hero" id="hero">
+    <h1 class="ca-text"><span class="thin">I make</span><span>things move.</span></h1>
+    <p id="intro"></p>
+    <div class="cta"><a class="btn solid" href="#work">See the best three</a><a class="btn" href="#posts">Latest posts</a></div>
+  </div>
+  <section class="blk" id="work"><h2>Best three</h2><div class="rail" id="rail"></div></section>
+  <section class="blk"><h2>What I do: tap one</h2><div class="chips" id="chips"></div><div class="glass" id="skillcard"><b>Pick a skill</b><span>Each one has a point of view.</span></div></section>
+  <section class="blk" id="posts"><h2>Latest</h2><div class="plist" id="plist"></div></section>
+  <footer>Wooper makes music at <a href="https://wooper.world">wooper.world</a></footer>
+</main>
+<script src="/lab/lab-data.js"></script>
+<script>
+const D = window.WC, $ = (id) => document.getElementById(id);
+$('intro').textContent = D.intro;
+$('rail').innerHTML = D.projects.map((p) => `<a class="pcard glass" href="${p.url}" target="_blank" rel="noopener"><div class="ca-img" style="--img:url('${p.img}')"><i></i></div><h3>${p.title}</h3><p>${p.blurb}</p></a>`).join('');
+$('chips').innerHTML = D.skills.map((s, i) => `<button class="chip" data-i="${i}" aria-pressed="false">${s.name}</button>`).join('');
+$('chips').addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c === b)); const s = D.skills[+b.dataset.i]; $('skillcard').innerHTML = `<b>${s.name}</b><span>${s.pov}</span><br><span style="font-size:13px;opacity:.6">${s.tools}</span>`; });
+$('plist').innerHTML = D.posts.map((p) => `<a class="prow glass" href="${p.url}"><div class="ca-img" style="--img:url('${p.img}')"><i></i></div><div><h3>${p.title}</h3><p>${p.blurb}</p></div><time>${p.date}</time></a>`).join('');
+
+const canvas = $('gl'), gl = canvas.getContext('webgl', { antialias: false, alpha: false });
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const hero = $('hero').querySelector('h1');
+let mouse = { x: .5, y: .5 }, target = { ...mouse }, last = -1e9;
+addEventListener('pointermove', (e) => { target = { x: e.clientX / innerWidth, y: 1 - e.clientY / innerHeight }; last = performance.now(); });
+if (gl) {
+  const vs = `attribute vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }`;
+  const fs = `precision highp float; uniform vec2 res, mouse; uniform float t, scroll;
+  float field(vec2 q){
+    q += .55*vec2(sin(q.y*1.6 + t*.35), cos(q.x*1.2 - t*.28));
+    q += .35*vec2(sin(q.y*3.1 - t*.5), cos(q.x*2.7 + t*.4));
+    return sin(q.x*2.4 + q.y*1.7 + t*.3) + sin(length(q)*3.6 - t*.5);
+  }
+  float line(float v){ float a = abs(fract(v*.9) - .5)*2.; return smoothstep(.955, 1., a); }
+  void main(){
+    vec2 asp = vec2(res.x/res.y, 1.);
+    vec2 p = (gl_FragCoord.xy/res - .5) * asp * 3.;
+    vec2 m = (mouse - .5) * asp * 3.;
+    vec2 dm = p - m; float d = length(dm); vec2 dir = dm/(d+1e-3);
+    float spread = .012 + .26*exp(-d*d*.5);                       // RGB offset is biggest near the cursor
+    vec3 c = vec3(line(field(p + dir*spread)), line(field(p)), line(field(p - dir*spread)));
+    float fade = .22 + .5*exp(-d*d*.28);
+    c *= fade;
+    float core = exp(-d*d*9.);
+    c += vec3(core*.9, core*.95, core)*.55;                       // prism core
+    c += vec3(exp(-pow(d-.62,2.)*180.)*.5, exp(-pow(d-.6,2.)*180.)*.5, exp(-pow(d-.58,2.)*180.)*.5)*.6;  // refraction ring
+    c *= 1. - smoothstep(0., 1.6, scroll)*.55;                    // calm down as you scroll
+    gl_FragColor = vec4(c, 1.);
+  }`;
+  const sh = (ty, src) => { const s = gl.createShader(ty); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog); gl.useProgram(prog);
+  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const U = (n) => gl.getUniformLocation(prog, n);
+  const size = () => { const dpr = Math.min(devicePixelRatio || 1, 1.5); canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr; gl.viewport(0, 0, canvas.width, canvas.height); };
+  size(); addEventListener('resize', size);
+  const loop = (now) => {
+    requestAnimationFrame(loop);
+    const t = now / 1000;
+    if (now - last > 2600 || reduce) target = { x: .5 + Math.cos(t * .5) * .25, y: .55 + Math.sin(t * .8) * .18 };
+    mouse.x += (target.x - mouse.x) * .08; mouse.y += (target.y - mouse.y) * .08;
+    gl.uniform2f(U('res'), canvas.width, canvas.height); gl.uniform2f(U('mouse'), mouse.x, mouse.y); gl.uniform1f(U('t'), t); gl.uniform1f(U('scroll'), scrollY / innerHeight);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    hero.style.setProperty('--dx', (mouse.x - .5) * 2); hero.style.setProperty('--dy', -(mouse.y - .5) * 2);
+  };
+  requestAnimationFrame(loop);
+}
+</script>
+<script src="/lab/lab.js"></script>
+</body>
+</html>

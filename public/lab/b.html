@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>B · The Workshop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/lab/lab.css" />
+<style>
+  html, body { height: 100%; }
+  #world { position: relative; min-height: 100svh; overflow: hidden; background: #000; }
+  .layer { position: absolute; inset: 0; mix-blend-mode: screen; will-change: transform; }
+  .layer.g { position: relative; inset: auto; }
+  .layer.r { filter: url(#ch-r); pointer-events: none; }
+  .layer.b { filter: url(#ch-b); pointer-events: none; }
+  .layer.g { filter: url(#ch-g); }
+  .scene { position: relative; max-width: 1100px; margin: 0 auto; padding: 84px 22px 120px; display: grid; gap: 38px; color: #fff; }
+  .sign { text-align: center; }
+  .sign small { display: block; letter-spacing: .3em; font-size: 12px; margin-bottom: 8px; opacity: .7; }
+  .sign h1 { margin: 0; font-size: clamp(34px, 7vw, 84px); font-weight: 800; letter-spacing: -.04em; line-height: .95; }
+  .note { max-width: 520px; margin: 0 auto; text-align: center; font-weight: 300; font-size: 17px; opacity: .85; }
+  .label { font-size: 12px; letter-spacing: .24em; text-transform: uppercase; opacity: .6; text-align: center; margin-bottom: 14px; }
+  .frames { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; align-items: end; }
+  @media (max-width: 760px) { .frames { grid-template-columns: 1fr; } }
+  .frame { border: 2px solid #fff; padding: 10px; border-radius: 4px; background: none; text-align: left; position: relative; transition: transform .35s cubic-bezier(.2,.9,.3,1.4); }
+  .frame:nth-child(1) { transform: rotate(-1.4deg); } .frame:nth-child(2) { transform: rotate(.8deg) translateY(-8px); } .frame:nth-child(3) { transform: rotate(-.6deg); }
+  .frame:hover { transform: rotate(0) scale(1.04) !important; }
+  .frame img { display: block; width: 100%; aspect-ratio: 16/10; object-fit: cover; }
+  .frame span { display: block; margin-top: 8px; font-weight: 800; letter-spacing: -.02em; }
+  .frame::before { content: ''; position: absolute; left: 50%; top: -22px; width: 1px; height: 22px; background: #fff; }
+  .shelf { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 14px 18px; padding-bottom: 14px; border-bottom: 3px solid #fff; }
+  .item { background: none; border: 0; padding: 0; display: grid; justify-items: center; gap: 6px; width: 92px; color: #fff; transform-origin: 50% 100%; }
+  .item svg { width: 64px; height: 84px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .item span { font-size: 12px; letter-spacing: .04em; text-align: center; line-height: 1.2; }
+  .item:hover svg, .item:focus-visible svg { animation: wob .6s ease-in-out; }
+  .item:focus-visible { outline: 1px dashed #fff; outline-offset: 6px; }
+  @keyframes wob { 20% { transform: rotate(-9deg); } 50% { transform: rotate(7deg) translateY(-6px); } 80% { transform: rotate(-3deg); } }
+  .bub { animation: bub 3.2s ease-in infinite; } .bub:nth-of-type(2) { animation-delay: 1.1s; } .bub:nth-of-type(3) { animation-delay: 2.1s; }
+  @keyframes bub { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-16px); opacity: 0; } }
+  .scroll-item { width: 150px; } .scroll-item svg { width: 120px; height: 64px; }
+  .ball svg { width: 96px; height: 100px; } .ball { width: 120px; }
+  /* lantern: dark everywhere except a soft pool around the cursor */
+  #dark { position: fixed; inset: 0; pointer-events: none; z-index: 5; background: radial-gradient(circle 420px at var(--mx, 50%) var(--my, 40%), rgba(0,0,0,0) 0%, rgba(0,0,0,.18) 45%, rgba(0,0,0,.7) 100%); }
+  #sheet { position: fixed; left: 50%; bottom: 0; transform: translate(-50%, 110%); z-index: 90; width: min(560px, 100vw); padding: 22px 22px calc(26px + env(safe-area-inset-bottom)); background: #0b0b0b; border: 1px solid var(--line); border-bottom: 0; border-radius: 18px 18px 0 0; transition: transform .45s cubic-bezier(.2,.9,.3,1.1); }
+  #sheet.open { transform: translate(-50%, 0); }
+  #sheet h3 { margin: 0 0 6px; font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+  #sheet p { margin: 0 0 14px; color: #c5c5ca; }
+  #sheet .x { position: absolute; right: 12px; top: 10px; background: none; border: 0; font-size: 22px; }
+  #sheet a.go { display: inline-block; padding: 10px 18px; border-radius: 999px; background: #fff; color: #000; text-decoration: none; font-weight: 600; }
+  #sheet img { width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; }
+</style>
+</head>
+<body data-proto="b">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="ch-r"><feColorMatrix type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/></filter>
+  <filter id="ch-g"><feColorMatrix type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0"/></filter>
+  <filter id="ch-b"><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0"/></filter>
+</svg>
+<div id="world">
+  <div class="layer r" id="lr" aria-hidden="true" inert></div>
+  <div class="layer b" id="lb" aria-hidden="true" inert></div>
+  <div class="layer g" id="lg">
+    <div class="scene" id="scene">
+      <header class="sign"><small>EDITOR · MOTION · COLOR</small><h1>Whit Cooper's<br>workshop</h1></header>
+      <p class="note" id="note"></p>
+      <div><div class="label">Best three, framed</div><div class="frames" id="frames"></div></div>
+      <div><div class="label">Potions: what I brew</div><div class="shelf" id="potions"></div></div>
+      <div><div class="label">Scrolls &amp; curiosities</div><div class="shelf" id="scrolls"></div></div>
+    </div>
+  </div>
+  <div id="dark"></div>
+</div>
+<div id="sheet" role="dialog" aria-live="polite"><button class="x" aria-label="Close">×</button><div id="sheet-body"></div></div>
+<script src="/lab/lab-data.js"></script>
+<script>
+const D = window.WC;
+const $ = (id) => document.getElementById(id);
+$('note').textContent = D.intro;
+const bottles = [
+  (n) => `<svg viewBox="0 0 64 84"><path d="M25 4h14M27 4v18M37 4v18"/><circle cx="32" cy="54" r="27"/><path d="M6 54q13-8 26 0t26 0"/><circle class="bub" cx="26" cy="46" r="2"/><circle class="bub" cx="38" cy="42" r="2.5"/><circle class="bub" cx="32" cy="38" r="1.6"/></svg>`,
+  () => `<svg viewBox="0 0 64 84"><path d="M24 4h16v10H24z"/><rect x="20" y="14" width="24" height="66" rx="11"/><path d="M20 46h24"/><circle class="bub" cx="30" cy="62" r="2"/><circle class="bub" cx="35" cy="56" r="2.4"/></svg>`,
+  () => `<svg viewBox="0 0 64 84"><path d="M26 4h12M28 4v26L8 78h48L36 30V4"/><path d="M16 62h32"/><circle class="bub" cx="30" cy="68" r="2"/><circle class="bub" cx="38" cy="66" r="2.4"/></svg>`,
+];
+$('potions').innerHTML = D.skills.map((s, i) => `<button class="item" data-k="skill" data-i="${i}">${bottles[i % 3]()}<span>${s.name}</span></button>`).join('');
+$('frames').innerHTML = D.projects.map((p, i) => `<button class="frame" data-k="proj" data-i="${i}"><img src="${p.img}" alt=""><span>${p.title}</span></button>`).join('');
+const scrollSvg = `<svg viewBox="0 0 120 64"><rect x="14" y="10" width="92" height="44" rx="6"/><ellipse cx="14" cy="32" rx="8" ry="22"/><ellipse cx="106" cy="32" rx="8" ry="22"/><path d="M30 24h60M30 32h48M30 40h54"/></svg>`;
+const ballSvg = `<svg viewBox="0 0 96 100"><circle cx="48" cy="44" r="34"/><path d="M26 28a26 26 0 0 1 22-10M30 60q18 14 40-6M34 44q14-12 28 0t-6 14"/><path d="M26 78h44l8 14H18z"/></svg>`;
+$('scrolls').innerHTML = D.posts.map((p, i) => `<button class="item scroll-item" data-k="post" data-i="${i}">${scrollSvg}<span>${p.title}</span></button>`).join('') + `<button class="item ball" data-k="wooper">${ballSvg}<span>Wooper (music)</span></button>`;
+
+// three colour layers: green is the real, clickable page; red and blue are inert copies that drift apart
+const html = $('scene').outerHTML;
+$('lr').innerHTML = html.replace('id="scene"', ''); $('lb').innerHTML = html.replace('id="scene"', '');
+[...$('lr').querySelectorAll('[id]'), ...$('lb').querySelectorAll('[id]')].forEach((e) => e.removeAttribute('id'));
+[...document.querySelectorAll('#lr button, #lb button')].forEach((b) => (b.tabIndex = -1));
+
+const sheet = $('sheet'), body = $('sheet-body');
+const open = (h) => { body.innerHTML = h; sheet.classList.add('open'); };
+sheet.querySelector('.x').onclick = () => sheet.classList.remove('open');
+$('lg').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-k]'); if (!el) return sheet.classList.remove('open');
+  const i = +el.dataset.i, k = el.dataset.k;
+  if (k === 'skill') { const s = D.skills[i]; open(`<h3>${s.name}</h3><p>${s.pov}</p><p style="opacity:.6;font-size:14px">${s.tools}</p>`); }
+  if (k === 'proj') { const p = D.projects[i]; open(`<img src="${p.img}" alt=""><h3>${p.title}</h3><p>${p.blurb}</p><a class="go" href="${p.url}" target="_blank" rel="noopener">Watch it</a>`); }
+  if (k === 'post') { const p = D.posts[i]; open(`<h3>${p.title}</h3><p>${p.blurb}</p><a class="go" href="${p.url}">Read it</a>`); }
+  if (k === 'wooper') open(`<h3>Wooper</h3><p>Bass-heavy journeys with a cinematic twist.</p><a class="go" href="https://wooper.world" target="_blank" rel="noopener">Enter wooper.world</a>`);
+});
+addEventListener('keydown', (e) => e.key === 'Escape' && sheet.classList.remove('open'));
+
+// lantern + chromatic offset follow the pointer; drift on their own when idle
+const world = $('world'); let target = { x: .5, y: .4 }, cur = { ...target }, last = -1e9;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+addEventListener('pointermove', (e) => { target = { x: e.clientX / innerWidth, y: e.clientY / innerHeight }; last = performance.now(); });
+const tick = (now) => {
+  requestAnimationFrame(tick);
+  if (now - last > 2600 || reduce) target = { x: .5 + Math.cos(now / 1900) * .3, y: .4 + Math.sin(now / 2600) * .25 };
+  cur.x += (target.x - cur.x) * .08; cur.y += (target.y - cur.y) * .08;
+  const w = innerWidth, h = innerHeight;
+  world.style.setProperty('--mx', `${cur.x * w}px`); world.style.setProperty('--my', `${cur.y * h}px`);
+  const dx = (cur.x - .5) * 2, dy = (cur.y - .5) * 2, base = 1;
+  $('lr').style.transform = `translate(${-(base + Math.abs(dx) * 4.5) * Math.sign(dx || 1)}px, ${-dy * 2}px)`;
+  $('lb').style.transform = `translate(${(base + Math.abs(dx) * 4.5) * Math.sign(dx || 1)}px, ${dy * 2}px)`;
+};
+requestAnimationFrame(tick);
+</script>
+<script src="/lab/lab.js"></script>
+</body>
+</html>
