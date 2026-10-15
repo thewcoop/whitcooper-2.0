@@ -44,7 +44,7 @@
 <body data-proto="a">
 <div id="stage"><canvas id="gl"></canvas><div class="hint"><b>Scroll</b></div></div>
 <main>
-  <section><p class="intro ca-text" id="intro"></p></section>
+  <section><p class="intro" id="intro"></p></section>
   <section><h2>Best three</h2><div class="projects" id="projects"></div></section>
   <section><h2>What I do</h2><div class="skills" id="skills"></div></section>
   <section><h2>Latest</h2><div class="posts" id="posts"></div></section>
@@ -59,55 +59,88 @@ document.getElementById('skills').innerHTML = D.skills.map((s) => `<div class="s
 document.querySelectorAll('.skill').forEach((el) => el.addEventListener('click', () => el.classList.toggle('open')));
 document.getElementById('posts').innerHTML = D.posts.map((p) => `<a class="post" href="${p.url}"><div class="ca-img" style="--img:url('${p.img}')"><i></i></div><div><h3>${p.title}</h3><p>${p.blurb}</p></div><time>${p.date}</time></a>`).join('');
 
-// ---- WebGL lens over the hero type ----
+// ---- WebGL glass lens over the wide logo ----
 const canvas = document.getElementById('gl');
 const gl = canvas.getContext('webgl', { antialias: false, alpha: false });
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Tunable look. The Tune panel edits these live; "Copy settings" sends them back to Claude.
+const T = { size: 0.2, magnify: 0.66, dispersion: 0.024, rim: 0.85, stretch: 0.7, flare: 0.5, grain: 0.035 };
+const RANGES = { size: [0.1, 0.4, 0.01, 'Lens size'], magnify: [0.35, 1, 0.01, 'Magnify (lower = stronger)'], dispersion: [0, 0.07, 0.001, 'Rainbow spread'], rim: [0, 1.6, 0.05, 'Glass rim glow'], stretch: [0, 2, 0.05, 'Stretch when moving'], flare: [0, 1.2, 0.05, 'Lens flare streak'], grain: [0, 0.12, 0.005, 'Film grain'] };
+
 if (gl) {
   const vs = `attribute vec2 p; varying vec2 uv; void main(){ uv = p*.5+.5; gl_Position = vec4(p,0.,1.); }`;
-  const fs = `precision highp float; varying vec2 uv; uniform sampler2D tex; uniform vec2 res, mouse; uniform float t, k;
-  float ring(float r, float c, float w){ return smoothstep(w, 0., abs(r-c)); }
+  const fs = `precision highp float;
+  varying vec2 uv; uniform sampler2D tex; uniform vec2 res, mouse, vel, rip; uniform float t, k, rad, mag, disp, rimk, flare, grain, ripAge;
+  vec3 hsv(float h, float s, float v){ vec3 c = clamp(abs(mod(h*6. + vec3(0.,4.,2.), 6.) - 3.) - 1., 0., 1.); return v * mix(vec3(1.), c, s); }
   float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
   void main(){
     vec2 asp = vec2(res.x/res.y, 1.);
-    vec2 d = (uv - mouse) * asp; float r = length(d); vec2 dir = d/(r+1e-4);
-    float lens = smoothstep(.34, 0., r);
-    float bulge = lens*lens;
-    vec2 base = uv - dir * bulge * .065 * k / asp;                 // glass refraction
-    float ca = (.0012 + lens * .028) * k;                          // RGB offset grows inside the lens
-    float R = texture2D(tex, base + dir*ca/asp).r;
-    float G = texture2D(tex, base).g;
-    float B = texture2D(tex, base - dir*ca/asp).b;
-    vec3 col = vec3(R,G,B);
-    // lens flare rings: three channels at slightly different radii
-    float rr = r + sin(t*.7)*.004;
-    vec3 flare = vec3(ring(rr, .205+ca*1.6, .0035), ring(rr, .205, .0035), ring(rr, .205-ca*1.6, .0035)) * .55 * k;
-    flare += vec3(ring(r, .12, .09), ring(r, .12, .09)*.9, ring(r, .12, .09)*1.0) * .05 * lens;
-    float streak = smoothstep(.012, 0., abs(d.y)) * smoothstep(.55, 0., abs(d.x)) * .22 * k;   // anamorphic streak
-    col += flare + vec3(streak*.7, streak*.85, streak);
-    col += (hash(uv*res + t) - .5) * .05;                          // grain
+    vec2 d = (uv - mouse) * asp;
+    float sp = clamp(length(vel*asp), 0., 1.0);
+    // stretch the lens along its direction of travel
+    vec2 vd = vel*asp / (length(vel*asp) + 1e-4);
+    float along = dot(d, vd); vec2 perp = d - along*vd;
+    float r = length(vec2(along / (1. + sp*.45), length(perp) * (1. + sp*.18)));
+    float rn = r / rad;
+    vec2 dir = d / (length(d) + 1e-4);
+    float inside = 1. - smoothstep(.97, 1.0, rn);
+    // sphere-like magnification: strong in the middle, none at the rim
+    float scale = mix(1., mag + (1.-mag)*pow(clamp(rn,0.,1.), 1.8), inside);
+    scale *= 1. - .06*exp(-max(rn-1.,0.)*7.)*(1.-inside);      // faint pinch just outside the glass
+    vec2 base = mouse + (d*scale)/asp;
+    // click shockwave
+    vec2 rd = (uv - rip)*asp; float rr = length(rd);
+    float wave = exp(-pow((rr - ripAge*.85)/.045, 2.)) * exp(-ripAge*2.2);
+    base += (rd/(rr+1e-4)) * wave * .022 / asp;
+    // spectral dispersion: 9 wavelengths smeared along the radius, strongest at the glass edge
+    float amount = (.003 + disp*pow(clamp(rn,0.,1.3), 3.0)*inside + sp*disp*.5*smoothstep(.2,1.,rn)*inside + wave*.008) * k;
+    vec3 acc = vec3(0.), wsum = vec3(0.);
+    float jit = hash(uv*res + t) - .5;
+    for (int i = 0; i < 16; i++){
+      float f = (float(i) + jit*.9)/15.;
+      vec3 w = hsv((1.-clamp(f,0.,1.))*.78, 1., 1.);
+      vec2 o = dir * (f-.5) * 2. * amount / asp;
+      acc += texture2D(tex, base + o).g * w; wsum += w;
+    }
+    vec3 col = acc / wsum;
+    // glass: bright spectral rim, soft inner shade, specular glint, bottom-right caustic
+    vec2 pn = d / rad;
+    float edge = smoothstep(.72, 1., rn) * (1. - smoothstep(1., 1.035, rn));
+    float ang = atan(pn.y, pn.x) / 6.2831 + .5;
+    vec3 rim = hsv(fract(ang + t*.02), .85, 1.) * pow(edge, 1.6) * rimk;
+    float shade = .1 * smoothstep(.2, 1., rn) * inside;
+    float glint = smoothstep(.2, 0., length((pn - vec2(-.36,.4))*vec2(1.,1.9))) * .55 * inside * k;
+    float caustic = edge * smoothstep(-.1, .9, dot(dir, vec2(.55,-.8))) * rimk * .7;
+    col = col*(1.-shade) + rim*.8 + glint + vec3(1.,.93,.9)*caustic*.6;
+    // soft bloom and an anamorphic streak through the lens
+    col += vec3(.9,.95,1.) * exp(-r*r/(rad*rad*.9)) * .045 * k;
+    float streak = smoothstep(.01, 0., abs(d.y)) * smoothstep(rad*2.6, 0., abs(d.x)) * .22 * flare * k;
+    col += vec3(streak*.75, streak*.88, streak);
+    col += (hash(uv*res + t) - .5) * grain;
     gl_FragColor = vec4(col, 1.);
   }`;
-  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const sh = (type, src) => { const x = gl.createShader(type); gl.shaderSource(x, src); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(x)); return x; };
   const prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog); gl.useProgram(prog);
   const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
   const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U = (n) => gl.getUniformLocation(prog, n);
   const tex = gl.createTexture(); const tc = document.createElement('canvas'); const tx = tc.getContext('2d');
+  const logo = new Image(); logo.src = '/whit-site-logo.svg';
   const drawType = () => {
     const dpr = Math.min(devicePixelRatio || 1, 2); const W = canvas.clientWidth, H = canvas.clientHeight;
     canvas.width = W * dpr; canvas.height = H * dpr; tc.width = canvas.width; tc.height = canvas.height;
     tx.fillStyle = '#000'; tx.fillRect(0, 0, tc.width, tc.height);
-    tx.fillStyle = '#fff'; tx.textAlign = 'center'; tx.textBaseline = 'middle';
-    const big = Math.min(W * 0.2, H * 0.3) * dpr;
-    tx.font = `800 ${big}px Inter, sans-serif`;
-    tx.fillText('WHIT', tc.width / 2, tc.height / 2 - big * 0.55);
-    tx.fillText('COOPER', tc.width / 2, tc.height / 2 + big * 0.55);
-    tx.fillStyle = '#9a9aa2'; tx.font = `500 ${Math.max(12, 13 * dpr)}px Inter, sans-serif`;
-    tx.fillText('EDITOR  ·  MOTION  ·  COLOR  ·  WIZARD', tc.width / 2, tc.height / 2 + big * 1.35);
-    tx.strokeStyle = 'rgba(255,255,255,.07)'; tx.lineWidth = dpr;
+    // faint grid so the glass always has something to bend
+    tx.strokeStyle = 'rgba(255,255,255,.09)'; tx.lineWidth = dpr;
     for (let x = 0; x < tc.width; x += 60 * dpr) { tx.beginPath(); tx.moveTo(x, 0); tx.lineTo(x, tc.height); tx.stroke(); }
     for (let y = 0; y < tc.height; y += 60 * dpr) { tx.beginPath(); tx.moveTo(0, y); tx.lineTo(tc.width, y); tx.stroke(); }
+    // the real wide logo, centred
+    const ar = logo.naturalWidth && logo.naturalHeight ? logo.naturalWidth / logo.naturalHeight : 1609.05 / 530.75;
+    const lw = Math.min(W * 0.86, H * 0.4 * ar) * dpr, lh = lw / ar;
+    tx.drawImage(logo, (tc.width - lw) / 2, tc.height * 0.46 - lh / 2, lw, lh);
+    tx.fillStyle = '#9a9aa2'; tx.textAlign = 'center'; tx.textBaseline = 'middle'; tx.font = `500 ${Math.max(12, 13 * dpr)}px Inter, sans-serif`;
+    tx.fillText('EDITOR  ·  MOTION  ·  COLOR  ·  WIZARD', tc.width / 2, tc.height * 0.46 + lh / 2 + 34 * dpr);
     gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tc);
@@ -115,24 +148,53 @@ if (gl) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.viewport(0, 0, canvas.width, canvas.height);
   };
-  let target = { x: 0.5, y: 0.5 }, cur = { x: 0.5, y: 0.5 }, lastMove = -1e9, k = 1;
-  const move = (e) => { const r = canvas.getBoundingClientRect(); target = { x: (e.clientX - r.left) / r.width, y: 1 - (e.clientY - r.top) / r.height }; lastMove = performance.now(); };
-  addEventListener('pointermove', move); addEventListener('pointerdown', move);
+  let target = { x: 0.5, y: 0.5 }, cur = { x: 0.5, y: 0.5 }, vel = { x: 0, y: 0 }, lastMove = -1e9, press = 0, pressT = 0, ripple = { x: .5, y: .5, t0: -10 };
+  const toUV = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width, y: 1 - (e.clientY - r.top) / r.height }; };
+  addEventListener('pointermove', (e) => { target = toUV(e); lastMove = performance.now(); });
+  addEventListener('pointerdown', (e) => { if (e.target.closest('.lab-panel, .lab-fab, .tune-fab, .lab-bar')) return; target = toUV(e); lastMove = performance.now(); pressT = 1; ripple = { ...target, t0: performance.now() / 1000 }; });
+  addEventListener('pointerup', () => (pressT = 0));
   addEventListener('resize', drawType);
   let visible = true; new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(canvas);
   const loop = (now) => {
     requestAnimationFrame(loop); if (!visible) return;
     const t = now / 1000;
-    if (now - lastMove > 2500 || reduce) target = { x: 0.5 + Math.cos(t * 0.6) * 0.28, y: 0.5 + Math.sin(t * 0.9) * 0.2 };   // drifts on its own when idle
-    cur.x += (target.x - cur.x) * 0.09; cur.y += (target.y - cur.y) * 0.09;
-    const scrollFade = Math.max(0, 1 - scrollY / (innerHeight * 0.8)); k = 1 * scrollFade;
-    gl.uniform2f(U('res'), canvas.width, canvas.height); gl.uniform2f(U('mouse'), cur.x, cur.y); gl.uniform1f(U('t'), t); gl.uniform1f(U('k'), Math.max(k, 0.2));
+    if (now - lastMove > 2500 || reduce) target = { x: 0.5 + Math.cos(t * 0.55) * 0.3, y: 0.46 + Math.sin(t * 0.85) * 0.14 };   // glides over the logo by itself when idle
+    const px = cur.x, py = cur.y;
+    cur.x += (target.x - cur.x) * 0.1; cur.y += (target.y - cur.y) * 0.1;
+    vel.x += ((cur.x - px) * 60 - vel.x) * 0.15; vel.y += ((cur.y - py) * 60 - vel.y) * 0.15;
+    press += (pressT - press) * 0.12;
+    const asp = canvas.width / canvas.height;
+    const k = Math.max(0.15, 1 - scrollY / (innerHeight * 0.8));
+    const rad = Math.min(T.size, 0.32 * asp) * (1 + press * 0.22);
+    gl.uniform2f(U('res'), canvas.width, canvas.height); gl.uniform2f(U('mouse'), cur.x, cur.y);
+    gl.uniform2f(U('vel'), vel.x * T.stretch, vel.y * T.stretch); gl.uniform2f(U('rip'), ripple.x, ripple.y);
+    gl.uniform1f(U('ripAge'), Math.max(0, t - ripple.t0)); gl.uniform1f(U('t'), t); gl.uniform1f(U('k'), k);
+    gl.uniform1f(U('rad'), rad); gl.uniform1f(U('mag'), T.magnify); gl.uniform1f(U('disp'), T.dispersion);
+    gl.uniform1f(U('rimk'), T.rim); gl.uniform1f(U('flare'), T.flare); gl.uniform1f(U('grain'), T.grain);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
-  document.fonts.load('800 100px Inter').then(() => document.fonts.ready).then(() => { drawType(); requestAnimationFrame(loop); });
-  // intro text + cards follow the cursor with the same RGB split
-  const intro = document.getElementById('intro');
-  addEventListener('pointermove', (e) => { intro.style.setProperty('--dx', ((e.clientX / innerWidth) - .5) * 2); intro.style.setProperty('--dy', ((e.clientY / innerHeight) - .5) * 2); });
+  const start = () => { drawType(); requestAnimationFrame(loop); };
+  Promise.all([document.fonts.load('500 13px Inter'), logo.decode ? logo.decode().catch(() => {}) : Promise.resolve()]).then(start);
+
+  // Tune panel: live sliders for the lens look
+  const fab = document.createElement('button'); fab.className = 'lab-fab tune-fab'; fab.style.right = '112px'; fab.textContent = 'Tune lens';
+  const panel = document.createElement('div'); panel.className = 'lab-panel'; panel.style.right = '14px';
+  panel.innerHTML = '<h4>Tune the lens</h4><p>Drag until it feels right, then copy the numbers and paste them to Claude.</p><div id="sliders"></div><button class="copy">Copy my settings</button>';
+  const sl = panel.querySelector('#sliders');
+  Object.entries(RANGES).forEach(([key, [min, max, step, label]]) => {
+    const row = document.createElement('label'); row.style.cssText = 'display:grid;grid-template-columns:1fr 54px;gap:4px 10px;font-size:13px;color:#c5c5ca;margin-bottom:12px';
+    row.innerHTML = `<span>${label}</span><output style="text-align:right;color:#fff">${T[key]}</output><input style="grid-column:1/-1;width:100%" type="range" min="${min}" max="${max}" step="${step}" value="${T[key]}">`;
+    const input = row.querySelector('input'), out = row.querySelector('output');
+    input.oninput = () => { T[key] = +input.value; out.textContent = T[key]; };
+    sl.append(row);
+  });
+  panel.querySelector('.copy').onclick = async (e) => {
+    const text = `Lens settings: ${JSON.stringify(T)}`;
+    try { await navigator.clipboard.writeText(text); } catch { const x = document.createElement('textarea'); x.value = text; document.body.append(x); x.select(); document.execCommand('copy'); x.remove(); }
+    e.target.textContent = 'Copied. Paste it to Claude'; setTimeout(() => (e.target.textContent = 'Copy my settings'), 2500);
+  };
+  fab.onclick = () => { panel.classList.toggle('open'); };
+  document.body.append(panel, fab);
 } else {
   document.getElementById('stage').innerHTML = '<h1 style="text-align:center;padding-top:30vh;font-size:12vw;font-weight:800">WHIT COOPER</h1>';
 }
