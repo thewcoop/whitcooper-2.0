@@ -65,13 +65,13 @@ const gl = canvas.getContext('webgl', { antialias: false, alpha: false });
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Tunable look. The Tune panel edits these live; "Copy settings" sends them back to Claude.
-const T = { size: 0.24, magnify: 0.82, dispersion: 0.048, rim: 0.05, stretch: 0.2, flare: 0, grain: 0.06, glint: 0.1 };
-const RANGES = { size: [0.1, 0.4, 0.01, 'Lens size'], magnify: [0.35, 1, 0.01, 'Magnify (lower = stronger)'], dispersion: [0, 0.07, 0.001, 'Rainbow spread'], rim: [0, 1.6, 0.05, 'Glass rim glow'], stretch: [0, 2, 0.05, 'Stretch when moving'], flare: [0, 1.2, 0.05, 'Lens flare streak'], glint: [0, 0.6, 0.01, 'Soft highlight'], grain: [0, 0.12, 0.005, 'Film grain'] };
+const T = { size: 0.24, magnify: 0.82, dispersion: 0.048, rim: 0.05, stretch: 0.2, flare: 0, grain: 0.06, glint: 0.1, bounce: 0.55, wobble: 0.5, soft: 0.5, gloss: 0.5 };
+const RANGES = { size: [0.1, 0.4, 0.01, 'Lens size'], magnify: [0.35, 1, 0.01, 'Magnify (lower = stronger)'], dispersion: [0, 0.07, 0.001, 'Rainbow spread'], rim: [0, 1.6, 0.05, 'Glass rim glow'], stretch: [0, 2, 0.05, 'Stretch when moving'], flare: [0, 1.2, 0.05, 'Lens flare streak'], glint: [0, 0.6, 0.01, 'Soft highlight'], gloss: [0, 1, 0.05, 'Gel gloss (curved sheen)'], bounce: [0, 1, 0.05, 'Bounce (springiness)'], wobble: [0, 1, 0.05, 'Blob wobble'], soft: [0, 1, 0.05, 'Soft gel edge'], grain: [0, 0.12, 0.005, 'Film grain'] };
 
 if (gl) {
   const vs = `attribute vec2 p; varying vec2 uv; void main(){ uv = p*.5+.5; gl_Position = vec4(p,0.,1.); }`;
   const fs = `precision highp float;
-  varying vec2 uv; uniform sampler2D tex; uniform vec2 res, mouse, vel, rip; uniform float t, k, rad, mag, disp, rimk, flare, grain, ripAge, glintk;
+  varying vec2 uv; uniform sampler2D tex; uniform vec2 res, mouse, vel, rip; uniform float t, k, rad, mag, disp, rimk, flare, grain, ripAge, glintk, wobk, softk, glossk;
   vec3 hsv(float h, float s, float v){ vec3 c = clamp(abs(mod(h*6. + vec3(0.,4.,2.), 6.) - 3.) - 1., 0., 1.); return v * mix(vec3(1.), c, s); }
   float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
   void main(){
@@ -82,9 +82,12 @@ if (gl) {
     vec2 vd = vel*asp / (length(vel*asp) + 1e-4);
     float along = dot(d, vd); vec2 perp = d - along*vd;
     float r = length(vec2(along / (1. + sp*.45), length(perp) * (1. + sp*.18)));
-    float rn = r / rad;
+    float th = atan(d.y, d.x), ph = atan(vel.y, vel.x);
+    // blob edge: jiggles along the direction of travel, plus a slow organic breathing
+    float shape = 1. + wobk*(.55*sp*cos(2.*(th-ph)) + .06*sin(3.*th + t*1.6) + .045*cos(5.*th - t*1.2)) + .02*sin(2.*th + t*.7);
+    float rn = r / (rad * shape);
     vec2 dir = d / (length(d) + 1e-4);
-    float inside = 1. - smoothstep(.97, 1.0, rn);
+    float inside = 1. - smoothstep(1. - softk*.2, 1.0, rn);
     // sphere-like magnification: strong in the middle, none at the rim
     float scale = mix(1., mag + (1.-mag)*pow(clamp(rn,0.,1.), 1.8), inside);
     scale *= 1. - .06*exp(-max(rn-1.,0.)*7.)*(1.-inside);      // faint pinch just outside the glass
@@ -111,6 +114,8 @@ if (gl) {
     vec3 rim = hsv(fract(ang + t*.02), .85, 1.) * pow(edge, 1.6) * rimk;
     float shade = .1 * smoothstep(.2, 1., rn) * inside;
     float glint = smoothstep(.75, 0., length((pn - vec2(-.3,.38))*vec2(.8,1.5))) * glintk * inside * k;
+    float arc = smoothstep(.2, 0., abs(rn - .8)) * smoothstep(.15, .95, dot(dir, normalize(vec2(-.6,.8)))) * glossk * .32 * inside * k;
+    glint += arc;
     float caustic = edge * smoothstep(-.1, .9, dot(dir, vec2(.55,-.8))) * rimk * .7;
     col = col*(1.-shade) + rim*.8 + glint + vec3(1.,.93,.9)*caustic*.6;
     // soft bloom and an anamorphic streak through the lens
@@ -148,29 +153,43 @@ if (gl) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.viewport(0, 0, canvas.width, canvas.height);
   };
-  let target = { x: 0.5, y: 0.5 }, cur = { x: 0.5, y: 0.5 }, vel = { x: 0, y: 0 }, lastMove = -1e9, press = 0, pressT = 0, ripple = { x: .5, y: .5, t0: -10 };
+  // Gel physics: the lens is a spring-mounted blob. Position, squash/stretch and wobble are all springs.
+  let target = { x: 0.5, y: 0.46 }, anchor = { x: 0.5, y: 0.46 }, P = { x: 0.5, y: 0.46, vx: 0, vy: 0 };
+  let S = { x: 0, y: 0, vx: 0, vy: 0 }, moved = false, lastMove = -1e9, idle = 0, press = 0, pressT = 0, prevT = performance.now() / 1000;
+  let ripple = { x: .5, y: .46, t0: -10 };
+  const step = (dt) => {
+    const kk = 55, zeta = 0.95 - 0.7 * T.bounce, dd = 2 * zeta * Math.sqrt(kk);
+    for (const a of ['x', 'y']) { const v = 'v' + a; P[v] += ((target[a] - P[a]) * kk - P[v] * dd) * dt; P[a] += P[v] * dt; }
+    const ks = 140, ds = 2 * (0.5 - 0.3 * T.bounce) * Math.sqrt(ks);               // jelly: stretch follows velocity but overshoots and wobbles
+    for (const a of ['x', 'y']) { const v = 'v' + a; S[v] += ((P[v] * 0.9 - S[a]) * ks - S[v] * ds) * dt; S[a] += S[v] * dt; }
+  };
+  window.__lens = () => ({ x: P.x, y: P.y, sx: S.x, sy: S.y });
   const toUV = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width, y: 1 - (e.clientY - r.top) / r.height }; };
-  addEventListener('pointermove', (e) => { target = toUV(e); lastMove = performance.now(); });
-  addEventListener('pointerdown', (e) => { if (e.target.closest('.lab-panel, .lab-fab, .tune-fab, .lab-bar')) return; target = toUV(e); lastMove = performance.now(); pressT = 1; ripple = { ...target, t0: performance.now() / 1000 }; });
+  addEventListener('pointermove', (e) => { anchor = toUV(e); moved = true; lastMove = performance.now(); });
+  addEventListener('pointerdown', (e) => { if (e.target.closest('.lab-panel, .lab-fab, .tune-fab, .lab-bar')) return; anchor = toUV(e); moved = true; lastMove = performance.now(); pressT = 1; ripple = { ...anchor, t0: performance.now() / 1000 }; });
   addEventListener('pointerup', () => (pressT = 0));
   addEventListener('resize', drawType);
   let visible = true; new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(canvas);
   const loop = (now) => {
     requestAnimationFrame(loop); if (!visible) return;
-    const t = now / 1000;
-    if (now - lastMove > 2500 || reduce) target = { x: 0.5 + Math.cos(t * 0.55) * 0.3, y: 0.46 + Math.sin(t * 0.85) * 0.14 };   // glides over the logo by itself when idle
-    const px = cur.x, py = cur.y;
-    cur.x += (target.x - cur.x) * 0.1; cur.y += (target.y - cur.y) * 0.1;
-    vel.x += ((cur.x - px) * 60 - vel.x) * 0.15; vel.y += ((cur.y - py) * 60 - vel.y) * 0.15;
-    press += (pressT - press) * 0.12;
+    const t = now / 1000, dt = Math.min(0.033, Math.max(0.001, t - prevT)); prevT = t;
+    // when idle the lens stays where it is and floats gently; it never teleports. With no pointer at all (phones) it roams the logo.
+    const still = now - lastMove > 1800 || reduce;
+    idle += ((still ? 1 : 0) - idle) * Math.min(1, dt * (still ? 0.8 : 6));
+    const home = moved ? anchor : { x: 0.5 + Math.cos(t * 0.5) * 0.28, y: 0.46 + Math.sin(t * 0.8) * 0.13 };
+    const amp = moved ? 0.022 : 0.0;
+    target = { x: home.x + Math.cos(t * 0.9) * amp * idle, y: home.y + Math.sin(t * 1.3) * amp * 0.8 * idle };
+    step(dt);
+    press += (pressT - press) * Math.min(1, dt * 8);
     const asp = canvas.width / canvas.height;
     const k = Math.max(0.15, 1 - scrollY / (innerHeight * 0.8));
     const rad = Math.min(T.size, 0.32 * asp) * (1 + press * 0.22);
-    gl.uniform2f(U('res'), canvas.width, canvas.height); gl.uniform2f(U('mouse'), cur.x, cur.y);
-    gl.uniform2f(U('vel'), vel.x * T.stretch, vel.y * T.stretch); gl.uniform2f(U('rip'), ripple.x, ripple.y);
+    gl.uniform2f(U('res'), canvas.width, canvas.height); gl.uniform2f(U('mouse'), P.x, P.y);
+    gl.uniform2f(U('vel'), S.x * T.stretch * 1.6, S.y * T.stretch * 1.6); gl.uniform2f(U('rip'), ripple.x, ripple.y);
     gl.uniform1f(U('ripAge'), Math.max(0, t - ripple.t0)); gl.uniform1f(U('t'), t); gl.uniform1f(U('k'), k);
     gl.uniform1f(U('rad'), rad); gl.uniform1f(U('mag'), T.magnify); gl.uniform1f(U('disp'), T.dispersion);
-    gl.uniform1f(U('rimk'), T.rim); gl.uniform1f(U('flare'), T.flare); gl.uniform1f(U('grain'), T.grain); gl.uniform1f(U('glintk'), T.glint);
+    gl.uniform1f(U('rimk'), T.rim); gl.uniform1f(U('flare'), T.flare); gl.uniform1f(U('grain'), T.grain);
+    gl.uniform1f(U('glintk'), T.glint); gl.uniform1f(U('wobk'), T.wobble); gl.uniform1f(U('softk'), T.soft); gl.uniform1f(U('glossk'), T.gloss);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
   const start = () => { drawType(); requestAnimationFrame(loop); };
