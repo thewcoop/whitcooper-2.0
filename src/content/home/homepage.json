@@ -1,5 +1,9 @@
 {
   "tagline": "Editor · Motion · Color · Wizard",
-  "intro": "I'm Whit, a Dallas-based editor, motion graphics artist, and all-around post-production problem solver. I take ideas from raw footage to polished final cut, blending editing, storytelling, design, and VFX to make work that actually *sticks*. When I'm not in the edit bay, you'll find me behind the decks as **Wooper**.",
-  "featured": ["project2", "project1", "camp-otx-promo-2021"]
+  "intro": "I'm Whit, a Dallas-based editor, motion graphics artist, and all-around post-production problem solver at Side Chops. I take ideas from raw footage to polished final cut, blending editing, storytelling, design, and VFX to make work that actually *sticks*. ",
+  "featured": [
+    "project1",
+    "project2",
+    "camp-otx-promo-2021"
+  ]
 }
