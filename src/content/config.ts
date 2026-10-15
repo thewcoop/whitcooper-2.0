@@ -7,6 +7,7 @@ const blog = defineCollection({
     date: z.union([z.date(), z.string()]),
     summary: z.string().optional(),
     coverImage: z.string().optional(),
+    draft: z.boolean().optional(),
     body: z.string().optional(),
     inlineImages: z.array(z.object({
       url: z.string(),

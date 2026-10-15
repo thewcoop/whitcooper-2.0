@@ -3,7 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('blog');
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
   return posts.map(post => ({ params: { slug: post.slug }, props: { post } }));
 }
 
@@ -389,6 +389,22 @@ const { Content } = await post.render();
     color: #888;
     font-style: italic;
     margin-top: 0.4rem;
+  }
+
+  /* ── cms-video: responsive YouTube/Vimeo embed ── */
+  :global(.prose div.cms-video) {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    margin: 2rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  :global(.prose div.cms-video iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
   }
 
   /* ── cms-photo-row: multi-column photo grid ── */
