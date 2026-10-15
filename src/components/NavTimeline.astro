@@ -1,5 +1,6 @@
 
 ---
+const { logo = true, overlay = false } = Astro.props;
 const items = [
   { href: '/', label: 'Home' },
   { href: '/portfolio', label: 'Portfolio' },
@@ -19,14 +20,16 @@ function isPathActive(href: string, currentPath: string): boolean {
   return currentPath === href || currentPath.startsWith(href + '/');
 }
 ---
-<nav class="w-full flex flex-col items-center gap-4 py-8 pt-10">
-  <a href="/" class="block group">
-    <img 
-      src="/whit-site-logo.svg" 
-      alt="Whit Cooper logo" 
-      class="h-16 transition-transform duration-300 group-hover:scale-110" 
-    />
-  </a>
+<nav class={`w-full flex flex-col items-center gap-4 py-8 pt-10 ${overlay ? 'absolute top-0 left-0 right-0 z-30' : ''}`}>
+  {logo && (
+    <a href="/" class="block group">
+      <img 
+        src="/whit-site-logo.svg" 
+        alt="Whit Cooper logo" 
+        class="h-16 transition-transform duration-300 group-hover:scale-110" 
+      />
+    </a>
+  )}
   
   <div class="relative flex items-center gap-8">
     {items.map(({href, label}) => {

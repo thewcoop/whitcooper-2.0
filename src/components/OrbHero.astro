@@ -1,0 +1,169 @@
+---
+// Full-screen hero: your wide logo seen through slowly rising glass orbs that merge, split,
+// and bend softly around the cursor. The tagline sits above the glass so it stays readable.
+const { tagline = '' } = Astro.props;
+---
+<section class="orb-hero" id="orb-hero" aria-label="Introduction">
+  <h1 class="sr-only">Whit Cooper</h1>
+  <canvas id="orb-canvas" aria-hidden="true"></canvas>
+  <img class="orb-fallback" id="orb-fallback" src="/whit-site-logo.svg" alt="" aria-hidden="true" />
+  {tagline && <p class="orb-tagline" id="orb-tagline">{tagline}</p>}
+  <a class="orb-scroll" href="#intro" aria-label="Scroll to content">Scroll</a>
+</section>
+
+<style>
+  .orb-hero { position: relative; height: 100svh; min-height: 560px; background: #000; overflow: hidden; }
+  #orb-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .orb-fallback { display: none; position: absolute; left: 50%; top: 46%; width: min(86vw, 900px); transform: translate(-50%, -50%); }
+  .orb-hero.no-gl .orb-fallback { display: block; }
+  .orb-hero.no-gl #orb-canvas { display: none; }
+  .orb-tagline { position: absolute; left: 0; right: 0; margin: 0; text-align: center; z-index: 2; pointer-events: none; font-size: clamp(11px, 1.5vw, 14px); font-weight: 500; letter-spacing: .26em; text-transform: uppercase; color: #e8e8ec; text-shadow: 0 0 14px rgba(0,0,0,.9), 0 1px 2px rgba(0,0,0,.8); }
+  .orb-scroll { position: absolute; left: 0; right: 0; bottom: 26px; text-align: center; z-index: 2; color: #8d8d92; font-size: 12px; letter-spacing: .24em; text-transform: uppercase; text-decoration: none; }
+  .orb-scroll::after { content: ''; display: block; width: 1px; height: 26px; margin: 10px auto 0; background: linear-gradient(#8d8d92, transparent); animation: orb-bob 2.2s ease-in-out infinite; }
+  @keyframes orb-bob { 50% { transform: translateY(6px); opacity: .5; } }
+  @media (prefers-reduced-motion: reduce) { .orb-scroll::after { animation: none; } }
+</style>
+
+<script>
+  const hero = document.getElementById('orb-hero') as HTMLElement;
+  const canvas = document.getElementById('orb-canvas') as HTMLCanvasElement;
+  const tagEl = document.getElementById('orb-tagline');
+  const gl = canvas.getContext('webgl', { antialias: false, alpha: false });
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Look settings (tuned in the lab).
+  const T = { size: 1.15, rise: 1, merge: 2, bend: 1.4, dispersion: 0.043, rim: 0, gloss: 0.1, glint: 0.04, soft: 0.4, warp: 0.55, reach: 0.15, grain: 0.05 };
+  const N = 8;
+
+  if (!gl) {
+    hero.classList.add('no-gl');
+  } else {
+    const vs = `attribute vec2 p; varying vec2 uv; void main(){ uv = p*.5+.5; gl_Position = vec4(p,0.,1.); }`;
+    const fs = `precision highp float;
+    varying vec2 uv; uniform sampler2D tex; uniform vec2 res, mouse; uniform vec4 orbs[${N}];
+    uniform float t, k, iso, cR, bend, disp, rimk, glossk, glintk, softk, warp, reach, grain;
+    vec3 hsv(float h, float s, float v){ vec3 c = clamp(abs(mod(h*6. + vec3(0.,4.,2.), 6.) - 3.) - 1., 0., 1.); return v * mix(vec3(1.), c, s); }
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+    void main(){
+      vec2 asp = vec2(res.x/res.y, 1.);
+      vec2 p = uv*asp;
+      vec2 dm = p - mouse; float fall = exp(-dot(dm,dm)/(2.*reach*reach));
+      vec2 pw = p + dm * warp * fall;
+      float F = 0.; vec2 G = vec2(0.);
+      for (int i = 0; i < ${N}; i++){
+        vec4 o = orbs[i]; vec2 dv = pw - o.xy;
+        float sy = .8 + .12*sin(o.w + t*.45);
+        float R = o.z * cR;
+        float u = (dv.x*dv.x + sy*sy*dv.y*dv.y) / (R*R);
+        if (u < 1.){ float a = 1. - u; float a2 = a*a; F += a2*a; G += -6.*a2*vec2(dv.x, sy*sy*dv.y)/(R*R); }
+      }
+      float w = smoothstep(iso*(.9 - .8*softk), iso*1.05, F);
+      float gl = length(G); vec2 n = G/(gl + 1e-4);
+      vec2 base = uv + (n * gl * bend * .008 * w * k) / asp;
+      float amount = (.003 + disp*clamp(gl/6., 0., 1.5)*w) * k;
+      float jit = hash(uv*res + t) - .5;
+      vec3 acc = vec3(0.), wsum = vec3(0.);
+      for (int i = 0; i < 16; i++){
+        float f = (float(i) + jit*.9)/15.;
+        vec3 wt = hsv((1.-clamp(f,0.,1.))*.78, 1., 1.);
+        acc += texture2D(tex, base + n*(f-.5)*2.*amount/asp).g * wt; wsum += wt;
+      }
+      vec3 col = acc / wsum;
+      vec2 L = normalize(vec2(-.55,.8));
+      float edge = exp(-pow((F - iso)/(.045 + .1*softk*iso), 2.));
+      float ang = atan(n.y, n.x)/6.2831 + .5;
+      col += hsv(fract(ang + t*.02), .85, 1.) * edge * rimk * k;
+      float facing = clamp(dot(-G, L)/5., 0., 1.);
+      float band = exp(-pow((F - iso*.9)/.16, 2.));
+      col += vec3(1.) * facing*facing * band * glossk * .3 * k;
+      col += vec3(1.) * smoothstep(iso, 1., F) * (.25 + .75*facing) * glintk * .45 * k;
+      col += (hash(uv*res + t) - .5) * grain;
+      gl_FragColor = vec4(col, 1.);
+    }`;
+    const sh = (type: number, src: string) => { const x = gl.createShader(type)!; gl.shaderSource(x, src); gl.compileShader(x); return x; };
+    const prog = gl.createProgram()!;
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { hero.classList.add('no-gl'); }
+    else {
+      gl.useProgram(prog);
+      const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      const U = (n: string) => gl.getUniformLocation(prog, n);
+      const tex = gl.createTexture(); const tc = document.createElement('canvas'); const tx = tc.getContext('2d')!;
+      const logo = new Image(); logo.src = '/whit-site-logo.svg';
+      let asp = hero.clientWidth / hero.clientHeight;
+
+      type Orb = { x: number; y: number; r: number; v: number; sway: number; sf: number; ph: number };
+      const sc = () => Math.min(1, 0.55 + 0.45 * asp);
+      const extent = (o: Orb) => o.r * T.size * sc() * T.merge * 1.5;   // furthest a blob can reach, incl. teardrop stretch
+      const spawn = (o: Orb, initial: boolean) => {
+        o.r = 0.05 + Math.pow(Math.random(), 1.7) * 0.16;
+        o.x = Math.random() * asp; o.v = 0.016 + Math.random() * 0.034;
+        o.sway = 0.02 + Math.random() * 0.06; o.sf = 0.12 + Math.random() * 0.22; o.ph = Math.random() * 6.283;
+        // First load: orbs start below and above the logo so it opens clear, then they drift through it.
+        // Later replacements start fully below the bottom edge.
+        o.y = initial ? (Math.random() < 0.6 ? -0.2 + Math.random() * 0.4 : 0.78 + Math.random() * 0.3) : -extent(o) - 0.05;
+        return o;
+      };
+      const orbs: Orb[] = Array.from({ length: N }, () => spawn({} as Orb, true));
+      const data = new Float32Array(N * 4);
+
+      const drawTexture = () => {
+        const dpr = Math.min(devicePixelRatio || 1, 1.75); const W = hero.clientWidth, H = hero.clientHeight;
+        const oldAsp = asp; asp = W / H; orbs.forEach((o) => (o.x *= asp / oldAsp));
+        canvas.width = W * dpr; canvas.height = H * dpr; tc.width = canvas.width; tc.height = canvas.height;
+        tx.fillStyle = '#000'; tx.fillRect(0, 0, tc.width, tc.height);
+        tx.strokeStyle = 'rgba(255,255,255,.09)'; tx.lineWidth = dpr;
+        for (let x = 0; x < tc.width; x += 60 * dpr) { tx.beginPath(); tx.moveTo(x, 0); tx.lineTo(x, tc.height); tx.stroke(); }
+        for (let y = 0; y < tc.height; y += 60 * dpr) { tx.beginPath(); tx.moveTo(0, y); tx.lineTo(tc.width, y); tx.stroke(); }
+        const ar = logo.naturalWidth && logo.naturalHeight ? logo.naturalWidth / logo.naturalHeight : 1609.05 / 530.75;
+        const lw = Math.min(W * 0.86, H * 0.4 * ar) * dpr, lh = lw / ar;
+        tx.drawImage(logo, (tc.width - lw) / 2, tc.height * 0.46 - lh / 2, lw, lh);
+        if (tagEl) tagEl.style.top = `${H * 0.46 + lh / dpr / 2 + 26}px`;
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tc);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      };
+
+      // Cursor is followed by a critically damped spring: silky, never overshoots, never snaps.
+      let target = { x: -5, y: -5 }, M = { x: -5, y: -5, vx: 0, vy: 0 }, moved = false, inWin = true, pres = 0, prevT = performance.now() / 1000;
+      const toUV = (e: PointerEvent) => { const r = canvas.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * asp, y: 1 - (e.clientY - r.top) / r.height }; };
+      addEventListener('pointermove', (e) => { target = toUV(e); if (!moved) { M.x = target.x; M.y = target.y; M.vx = M.vy = 0; moved = true; } inWin = true; });
+      document.addEventListener('mouseleave', () => (inWin = false));
+      document.addEventListener('mouseenter', () => (inWin = true));
+      let resizeTimer: number;
+      addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = window.setTimeout(drawTexture, 120); });
+
+      let visible = true; new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(hero);
+      const loop = (now: number) => {
+        requestAnimationFrame(loop); if (!visible) { prevT = now / 1000; return; }
+        const t = now / 1000, dt = Math.min(0.033, Math.max(0.001, t - prevT)); prevT = t;
+        const kk = 9, dd = 2 * Math.sqrt(kk);
+        for (const a of ['x', 'y'] as const) { const v = a === 'x' ? 'vx' : 'vy'; M[v] += ((target[a] - M[a]) * kk - M[v] * dd) * dt; M[a] += M[v] * dt; }
+        pres += (((moved && inWin) ? 1 : 0) - pres) * (1 - Math.exp(-dt * 1.4));
+        const speed = reduce ? 0 : T.rise;
+        orbs.forEach((o, i) => {
+          o.y += o.v * speed * dt;
+          if (o.y - extent(o) > 1.02) spawn(o, false);                      // replaced only once fully above the top edge
+          data[i * 4] = o.x + Math.sin(t * o.sf + o.ph) * o.sway; data[i * 4 + 1] = o.y;
+          data[i * 4 + 2] = o.r * T.size * sc() * (1 + 0.07 * Math.sin(t * 0.5 + o.ph * 2)); data[i * 4 + 3] = o.ph;
+        });
+        const r = hero.getBoundingClientRect();
+        const k = Math.max(0.15, Math.min(1, r.bottom / (r.height * 0.9)));     // effect calms as the hero scrolls away
+        const iso = Math.pow(1 - 1 / (T.merge * T.merge), 3);
+        gl.uniform2f(U('res'), canvas.width, canvas.height); gl.uniform2f(U('mouse'), M.x, M.y);
+        gl.uniform4fv(U('orbs'), data); gl.uniform1f(U('t'), t); gl.uniform1f(U('k'), k);
+        gl.uniform1f(U('iso'), iso); gl.uniform1f(U('cR'), T.merge); gl.uniform1f(U('bend'), T.bend); gl.uniform1f(U('disp'), T.dispersion);
+        gl.uniform1f(U('rimk'), T.rim); gl.uniform1f(U('glossk'), T.gloss); gl.uniform1f(U('glintk'), T.glint); gl.uniform1f(U('softk'), T.soft);
+        gl.uniform1f(U('warp'), T.warp * pres); gl.uniform1f(U('reach'), T.reach); gl.uniform1f(U('grain'), T.grain);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      };
+      const start = () => { drawTexture(); requestAnimationFrame(loop); };
+      Promise.all([logo.decode ? logo.decode().catch(() => {}) : Promise.resolve()]).then(start);
+    }
+  }
+</script>

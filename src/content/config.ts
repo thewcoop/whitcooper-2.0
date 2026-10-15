@@ -39,9 +39,12 @@ const portfolio = defineCollection({
 const home = defineCollection({
   type: 'data',
   schema: z.object({
-    headline: z.string(),
-    subline: z.string().optional(),
+    tagline: z.string().optional(),
     intro: z.string().optional(),
+    featured: z.array(z.string()).optional(),      // portfolio slugs shown as "Best three"
+    // legacy fields from the old home page, kept so old files still validate
+    headline: z.string().optional(),
+    subline: z.string().optional(),
     ctaPrimaryLabel: z.string().optional(),
     ctaPrimaryUrl: z.string().optional(),
     ctaSecondaryLabel: z.string().optional(),
@@ -55,6 +58,7 @@ const skills = defineCollection({
   schema: z.object({
     name: z.string(),
     pov: z.string(),
+    order: z.number().optional(),
     highlights: z.array(z.object({
       item: z.string()
     }))
