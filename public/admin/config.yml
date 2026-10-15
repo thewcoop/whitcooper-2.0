@@ -41,18 +41,20 @@ collections:
           - { label: Headshot, name: headshot, widget: image }
   - name: "home"
     label: "Home"
-    folder: "src/content/home"
-    create: false
-    slug: "index"
-    extension: "json"
-    editor: { preview: false }
-    fields:
-      - { label: "Headline", name: "headline", widget: "string" }
-      - { label: "Subline", name: "subline", widget: "text", required: false }
-      - { label: "CTA: Portfolio Label", name: "ctaPortfolioLabel", widget: "string", default: "See the spells in action" }
-      - { label: "CTA: Portfolio Href", name: "ctaPortfolioHref", widget: "string", default: "/portfolio" }
-      - { label: "CTA: Contact Label", name: "ctaContactLabel", widget: "string", default: "Summon me" }
-      - { label: "CTA: Contact Href", name: "ctaContactHref", widget: "string", default: "/contact" }
+    files:
+      - file: src/content/home/homepage.json
+        label: "Homepage"
+        name: "homepage"
+        editor: { preview: false }
+        fields:
+          - { label: "Headline", name: "headline", widget: "string" }
+          - { label: "Subline", name: "subline", widget: "text", required: false }
+          - { label: "Intro", name: "intro", widget: "text", required: false }
+          - { label: "Primary Button Label", name: "ctaPrimaryLabel", widget: "string", required: false }
+          - { label: "Primary Button Link", name: "ctaPrimaryUrl", widget: "string", required: false }
+          - { label: "Secondary Button Label", name: "ctaSecondaryLabel", widget: "string", required: false }
+          - { label: "Secondary Button Link", name: "ctaSecondaryUrl", widget: "string", required: false }
+          - { label: "Hero Image", name: "heroImage", widget: "image", required: false }
   - name: "skills"
     label: "Skills"
     folder: "src/content/skills"

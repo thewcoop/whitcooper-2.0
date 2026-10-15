@@ -2,7 +2,13 @@
 import '../styles/global.css';
 import Nav from '../components/NavTimeline.astro';
 import Blob from '../components/BlobBackground.astro';
-const { title = 'Whit Cooper', description = 'Creative Wizardry' } = Astro.props;
+const {
+  title = 'Whit Cooper',
+  description = 'Editor, motion graphics artist, and all-around post-production problem solver based in Dallas.',
+  image = '/uploads/whit-prof-pic.png',
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const imageUrl = new URL(image, Astro.site);
 ---
 <html lang="en">
   <head>
@@ -10,6 +16,14 @@ const { title = 'Whit Cooper', description = 'Creative Wizardry' } = Astro.props
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Whit Cooper" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={imageUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/favicon.ico" />
     
     <!-- Neue Haas Grotesk Display Pro (using Inter as close alternative) -->
