@@ -11,6 +11,7 @@
 <style>
   #stage { position: relative; height: 100svh; min-height: 560px; }
   #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .tagline { position: absolute; left: 0; right: 0; margin: 0; text-align: center; z-index: 2; pointer-events: none; font-size: clamp(11px, 1.5vw, 14px); font-weight: 500; letter-spacing: .26em; text-transform: uppercase; color: #e8e8ec; text-shadow: 0 0 14px rgba(0,0,0,.9), 0 1px 2px rgba(0,0,0,.8); }
   .hint { position: absolute; left: 0; right: 0; bottom: 28px; text-align: center; color: var(--mut); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; }
   .hint b { display: inline-block; animation: bob 2s ease-in-out infinite; }
   @keyframes bob { 50% { transform: translateY(6px); } }
@@ -42,7 +43,7 @@
 </style>
 </head>
 <body data-proto="a">
-<div id="stage"><canvas id="gl"></canvas><div class="hint"><b>Scroll</b></div></div>
+<div id="stage"><canvas id="gl"></canvas><p class="tagline" id="tagline">Editor &nbsp;·&nbsp; Motion &nbsp;·&nbsp; Color &nbsp;·&nbsp; Wizard</p><div class="hint"><b>Scroll</b></div></div>
 <main>
   <section><p class="intro" id="intro"></p></section>
   <section><h2>Best three</h2><div class="projects" id="projects"></div></section>
@@ -140,8 +141,7 @@ if (gl) {
     const ar = logo.naturalWidth && logo.naturalHeight ? logo.naturalWidth / logo.naturalHeight : 1609.05 / 530.75;
     const lw = Math.min(W * 0.86, H * 0.4 * ar) * dpr, lh = lw / ar;
     tx.drawImage(logo, (tc.width - lw) / 2, tc.height * 0.46 - lh / 2, lw, lh);
-    tx.fillStyle = '#9a9aa2'; tx.textAlign = 'center'; tx.textBaseline = 'middle'; tx.font = `500 ${Math.max(12, 13 * dpr)}px Inter, sans-serif`;
-    tx.fillText('EDITOR  ·  MOTION  ·  COLOR  ·  WIZARD', tc.width / 2, tc.height * 0.46 + lh / 2 + 34 * dpr);
+    document.getElementById('tagline').style.top = `${H * 0.46 + lh / dpr / 2 + 26}px`;       // crisp text, sits above the glass
     gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tc);
