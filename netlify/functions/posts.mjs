@@ -2,7 +2,7 @@
 // Routes: GET /api/posts, GET|PUT|DELETE /api/posts/:slug
 import { json, readJson } from '../lib/http.mjs';
 import { isAuthed } from '../lib/session.mjs';
-import { listPosts, readFile, commitFiles, BLOG_DIR, UPLOADS_DIR } from '../lib/github.mjs';
+import { listPosts, readFile, commitFiles, branchFor, BLOG_DIR, UPLOADS_DIR } from '../lib/github.mjs';
 
 export const config = { path: ['/api/posts', '/api/posts/*'] };
 
@@ -32,14 +32,15 @@ export default async (req) => {
   if (!isAuthed(req)) return json({ error: 'Please sign in.' }, 401);
   if (!process.env.GITHUB_TOKEN) return json({ error: 'GITHUB_TOKEN is not set.' }, 503);
 
+  const b = branchFor(req);
   const url = new URL(req.url);
   const slug = url.pathname.replace(/^\/api\/posts\/?/, '').replace(/\/$/, '');
 
   try {
     if (!slug) {
       if (req.method !== 'GET') return json({ error: 'Method not allowed' }, 405);
-      const files = await listPosts();
-      const posts = await Promise.all(files.map(async (f) => summarize(f.name, (await readFile(f.path)).raw)));
+      const files = await listPosts(b);
+      const posts = await Promise.all(files.map(async (f) => summarize(f.name, (await readFile(f.path, b)).raw)));
       posts.sort((a, b) => new Date(b.date) - new Date(a.date));
       return json({ posts });
     }
@@ -48,7 +49,7 @@ export default async (req) => {
     const path = `${BLOG_DIR}/${slug}.md`;
 
     if (req.method === 'GET') {
-      const file = await readFile(path);
+      const file = await readFile(path, b);
       return json({ slug, ...file });
     }
 
@@ -65,12 +66,12 @@ export default async (req) => {
         files.push({ path: `${UPLOADS_DIR}/${img.name}`, base64: img.base64 });
       }
       const verb = body.isNew ? 'Add' : 'Update';
-      await commitFiles(`${verb} post "${slug}" via Studio`, files);
+      await commitFiles(`${verb} post "${slug}" via Studio`, files, b);
       return json({ ok: true, slug });
     }
 
     if (req.method === 'DELETE') {
-      await commitFiles(`Delete post "${slug}" via Studio`, [{ path, delete: true }]);
+      await commitFiles(`Delete post "${slug}" via Studio`, [{ path, delete: true }], b);
       return json({ ok: true });
     }
 

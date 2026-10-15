@@ -5,7 +5,14 @@ const API = process.env.GITHUB_API_URL || 'https://api.github.com';
 export const BLOG_DIR = 'src/content/blog';
 export const UPLOADS_DIR = 'public/uploads';
 
-export const branch = () => process.env.GITHUB_BRANCH || 'main';
+// Which branch to read and write. On a branch preview (home-redesign--whitcooper.netlify.app) Studio
+// edits that same branch, so testing never touches the live site. The real domain edits main.
+export function branchFor(req) {
+  if (process.env.GITHUB_BRANCH) return process.env.GITHUB_BRANCH;
+  const host = new URL(req.url).hostname;
+  const m = host.match(/^([a-z0-9-]+)--[a-z0-9-]+\.netlify\.app$/);
+  return m ? m[1] : 'main';
+}
 
 async function gh(path, method = 'GET', body) {
   const resp = await fetch(`${API}/repos/${REPO}${path}`, {
@@ -28,19 +35,19 @@ async function gh(path, method = 'GET', body) {
   return data;
 }
 
-export async function listPosts() {
-  const entries = await gh(`/contents/${BLOG_DIR}?ref=${branch()}`);
-  return entries.filter((e) => e.type === 'file' && /\.mdx?$/.test(e.name));
+export async function listDir(dir, b, extRe = /./) {
+  const entries = await gh(`/contents/${dir}?ref=${b}`);
+  return entries.filter((e) => e.type === 'file' && extRe.test(e.name));
 }
+export const listPosts = (b) => listDir(BLOG_DIR, b, /\.mdx?$/);
 
-export async function readFile(path) {
-  const f = await gh(`/contents/${path}?ref=${branch()}`);
+export async function readFile(path, b) {
+  const f = await gh(`/contents/${path}?ref=${b}`);
   return { sha: f.sha, raw: Buffer.from(f.content, 'base64').toString('utf8') };
 }
 
 // files: [{ path, content (utf8 string) | base64 (string) | delete: true }]
-export async function commitFiles(message, files) {
-  const b = branch();
+export async function commitFiles(message, files, b) {
   const ref = await gh(`/git/refs/heads/${b}`);
   const tip = await gh(`/git/commits/${ref.object.sha}`);
   const tree = [];

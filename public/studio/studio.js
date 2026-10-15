@@ -1,6 +1,7 @@
 // Studio: a phone-friendly editor for whitcooper.com posts.
 // Sign-in uses passkeys. Posts are saved to GitHub through /api/posts (see netlify/functions).
 import { parsePost, serializePost, serializeBlock, slugify, videoEmbed, esc } from './post-format.js';
+import { makeSite } from './site-editors.js';
 
 const app = document.getElementById('app');
 const toastEl = document.getElementById('toast');
@@ -170,6 +171,7 @@ async function renderList() {
       h('div', { class: 'row' }, h('a', { class: 'btn small', href: '/', target: '_blank', rel: 'noopener' }, 'View site'),
         h('button', { class: 'primary', onclick: () => openEditor(null) }, '+ New post')),
     ),
+    sectionTabs('posts'),
     list,
     h('div', { class: 'row', style: 'margin-top:28px' }, addDevice, signOut),
   ));
@@ -513,6 +515,14 @@ function renderEditor(state) {
   grow(summaryInput);
   refreshPreview();
 }
+
+// ---------- site sections: posts, projects, skills, home page ----------
+let site;
+const sectionTabs = (active) => h('div', { class: 'sections', role: 'tablist' },
+  [['posts', 'Posts'], ['projects', 'Projects'], ['skills', 'Skills'], ['home', 'Home']].map(([k, label]) =>
+    h('button', { role: 'tab', 'aria-selected': String(k === active), onclick: () => { if (k === active) return; k === 'posts' ? renderList() : site[k](); } }, label)));
+const textGrow = (t) => { t.style.height = 'auto'; t.style.height = `${t.scrollHeight + 2}px`; };
+site = makeSite({ h, api, mount, toast, pickPhotos, imgUrl, pending, slugify, tabs: sectionTabs, textGrow });
 
 // ---------- boot ----------
 async function boot() {

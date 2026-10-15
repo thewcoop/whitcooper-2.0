@@ -108,3 +108,9 @@ code { background: rgba(255,255,255,.1); padding: 2px 6px; border-radius: 6px; f
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
 #toast.bad { border-color: var(--danger); }
 #toast.good { border-color: var(--ok); }
+
+.sections { display: flex; gap: 6px; padding: 4px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); width: fit-content; max-width: 100%; overflow-x: auto; margin-bottom: 18px; scrollbar-width: none; }
+.sections::-webkit-scrollbar { display: none; }
+.sections button { border: 0; background: transparent; min-height: 38px; white-space: nowrap; }
+.sections button[aria-selected="true"] { background: var(--card-2); }
+.chipbtn[aria-pressed="true"] { background: #fff; color: #06060a; border-color: #fff; font-weight: 600; }
