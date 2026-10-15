@@ -65,13 +65,13 @@ const gl = canvas.getContext('webgl', { antialias: false, alpha: false });
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Tunable look. The Tune panel edits these live; "Copy settings" sends them back to Claude.
-const T = { size: 0.2, magnify: 0.66, dispersion: 0.024, rim: 0.85, stretch: 0.7, flare: 0.5, grain: 0.035 };
-const RANGES = { size: [0.1, 0.4, 0.01, 'Lens size'], magnify: [0.35, 1, 0.01, 'Magnify (lower = stronger)'], dispersion: [0, 0.07, 0.001, 'Rainbow spread'], rim: [0, 1.6, 0.05, 'Glass rim glow'], stretch: [0, 2, 0.05, 'Stretch when moving'], flare: [0, 1.2, 0.05, 'Lens flare streak'], grain: [0, 0.12, 0.005, 'Film grain'] };
+const T = { size: 0.24, magnify: 0.82, dispersion: 0.048, rim: 0.05, stretch: 0.2, flare: 0, grain: 0.06, glint: 0.1 };
+const RANGES = { size: [0.1, 0.4, 0.01, 'Lens size'], magnify: [0.35, 1, 0.01, 'Magnify (lower = stronger)'], dispersion: [0, 0.07, 0.001, 'Rainbow spread'], rim: [0, 1.6, 0.05, 'Glass rim glow'], stretch: [0, 2, 0.05, 'Stretch when moving'], flare: [0, 1.2, 0.05, 'Lens flare streak'], glint: [0, 0.6, 0.01, 'Soft highlight'], grain: [0, 0.12, 0.005, 'Film grain'] };
 
 if (gl) {
   const vs = `attribute vec2 p; varying vec2 uv; void main(){ uv = p*.5+.5; gl_Position = vec4(p,0.,1.); }`;
   const fs = `precision highp float;
-  varying vec2 uv; uniform sampler2D tex; uniform vec2 res, mouse, vel, rip; uniform float t, k, rad, mag, disp, rimk, flare, grain, ripAge;
+  varying vec2 uv; uniform sampler2D tex; uniform vec2 res, mouse, vel, rip; uniform float t, k, rad, mag, disp, rimk, flare, grain, ripAge, glintk;
   vec3 hsv(float h, float s, float v){ vec3 c = clamp(abs(mod(h*6. + vec3(0.,4.,2.), 6.) - 3.) - 1., 0., 1.); return v * mix(vec3(1.), c, s); }
   float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
   void main(){
@@ -110,7 +110,7 @@ if (gl) {
     float ang = atan(pn.y, pn.x) / 6.2831 + .5;
     vec3 rim = hsv(fract(ang + t*.02), .85, 1.) * pow(edge, 1.6) * rimk;
     float shade = .1 * smoothstep(.2, 1., rn) * inside;
-    float glint = smoothstep(.2, 0., length((pn - vec2(-.36,.4))*vec2(1.,1.9))) * .55 * inside * k;
+    float glint = smoothstep(.75, 0., length((pn - vec2(-.3,.38))*vec2(.8,1.5))) * glintk * inside * k;
     float caustic = edge * smoothstep(-.1, .9, dot(dir, vec2(.55,-.8))) * rimk * .7;
     col = col*(1.-shade) + rim*.8 + glint + vec3(1.,.93,.9)*caustic*.6;
     // soft bloom and an anamorphic streak through the lens
@@ -170,7 +170,7 @@ if (gl) {
     gl.uniform2f(U('vel'), vel.x * T.stretch, vel.y * T.stretch); gl.uniform2f(U('rip'), ripple.x, ripple.y);
     gl.uniform1f(U('ripAge'), Math.max(0, t - ripple.t0)); gl.uniform1f(U('t'), t); gl.uniform1f(U('k'), k);
     gl.uniform1f(U('rad'), rad); gl.uniform1f(U('mag'), T.magnify); gl.uniform1f(U('disp'), T.dispersion);
-    gl.uniform1f(U('rimk'), T.rim); gl.uniform1f(U('flare'), T.flare); gl.uniform1f(U('grain'), T.grain);
+    gl.uniform1f(U('rimk'), T.rim); gl.uniform1f(U('flare'), T.flare); gl.uniform1f(U('grain'), T.grain); gl.uniform1f(U('glintk'), T.glint);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
   const start = () => { drawType(); requestAnimationFrame(loop); };
