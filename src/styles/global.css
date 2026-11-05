@@ -38,7 +38,7 @@ strong, b, .font-bold, .font-semibold {
 }
 
 /* Title and headline specific styling */
-.title, .headline, .text-gradient, .rainbow-text {
+.title, .headline {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-weight: 700;
 }
@@ -46,30 +46,6 @@ strong, b, .font-bold, .font-semibold {
 /* Body text styling */
 p, span, div, li, a, button, input, textarea, select {
   font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* Magical particle system styles */
-.magical-particle {
-  will-change: transform, opacity, filter;
-  backface-visibility: hidden;
-  transform-style: preserve-3d;
-}
-
-/* Custom component styles */
-.btn-primary {
-  @apply inline-flex items-center justify-center rounded-2xl border border-fg/10 bg-fg/5 px-6 py-4 text-sm font-medium text-fg hover:border-fg/30 hover:bg-fg/10 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98];
-}
-
-.btn-secondary {
-  @apply inline-flex items-center justify-center rounded-2xl border border-fg/10 bg-transparent px-6 py-4 text-sm font-medium text-fg/80 hover:border-fg/30 hover:text-fg hover:bg-fg/5 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98];
-}
-
-/* Text gradient utility */
-.text-gradient {
-  background: linear-gradient(135deg, #fafafa 0%, #a1a1aa 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* Improved focus states */

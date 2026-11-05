@@ -23,7 +23,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 const fmt = (d: string | Date) => new Date(d).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 const bg = (u?: string) => (u ? `--img:url("${encodeURI(u)}")` : '');
 ---
-<Base title="Whit Cooper | Editor, motion designer, colorist" bare overlayNav navLogo={false}>
+<Base title="Whit Cooper | Editor, motion designer, colorist" overlayNav navLogo={false}>
   <OrbHero tagline={home.tagline} />
 
   <main>

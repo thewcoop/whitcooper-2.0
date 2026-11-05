@@ -1,12 +1,10 @@
 ---
 import '../styles/global.css';
 import Nav from '../components/NavTimeline.astro';
-import Blob from '../components/BlobBackground.astro';
 const {
   title = 'Whit Cooper',
   description = 'Editor, motion graphics artist, and all-around post-production problem solver based in Dallas.',
   image = '/uploads/whit-prof-pic.png',
-  bare = false,          // no coloured blobs or sparkle cursor (used by the home page)
   overlayNav = false,    // nav floats over the first screen instead of pushing it down
   navLogo = true,
 } = Astro.props;
@@ -40,10 +38,8 @@ const imageUrl = new URL(image, Astro.site);
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
   </head>
-  <body class={bare ? 'bg-black' : ''}>
-    {!bare && <Blob />}
+  <body class="bg-black">
     <Nav logo={navLogo} overlay={overlayNav} />
     <slot />
-    {!bare && <script src="/magic-cursor.js" is:inline></script>}
   </body>
 </html>
