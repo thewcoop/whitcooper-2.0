@@ -137,8 +137,6 @@ const bg = (u?: string) => (u ? `--img:url("${encodeURI(u)}")` : '');
   .pf-card { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; display: grid; gap: 12px; align-content: start; }
   .pf-card[hidden] { display: none; }
   .pf-thumb { aspect-ratio: 16/10; border-radius: 4px; }
-  .pf-card:hover .ca-img::before, .pf-card:focus-visible .ca-img::before { transform: translate(-7px, -2px); }
-  .pf-card:hover .ca-img::after, .pf-card:focus-visible .ca-img::after { transform: translate(7px, 2px); }
   .pf-card:focus-visible { outline: 2px solid #fff; outline-offset: 6px; }
   .pf-play { position: absolute; z-index: 5; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; border: 1px solid rgba(255,255,255,.7); background: rgba(0,0,0,.45); color: #fff; display: grid; place-items: center; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: transform .35s cubic-bezier(.2,.8,.2,1), background .3s; }
   .pf-card:hover .pf-play, .pf-card:focus-visible .pf-play { transform: scale(1.12); background: rgba(255,255,255,.18); }

@@ -17,7 +17,7 @@ const bg = (u?: string) => (u ? `--img:url("${encodeURI(u)}")` : '');
 
     <div class="hair">
       {posts.map((post) => (
-        <a class="bl-row reveal" href={`/blog/${post.slug}/`}>
+        <a class="bl-row rowtint reveal" href={`/blog/${post.slug}/`}>
           <div class={`ca-img bl-cover ${post.data.coverImage ? '' : 'empty'}`} style={bg(post.data.coverImage)}><i></i></div>
           <div class="bl-text">
             <time datetime={String(post.data.date)}>{fmt(post.data.date)}</time>
@@ -41,8 +41,6 @@ const bg = (u?: string) => (u ? `--img:url("${encodeURI(u)}")` : '');
   .bl-text p { margin: 0; color: #a1a1aa; font-size: 17px; max-width: 36em; }
   .bl-arrow { font-size: 28px; color: #8d8d92; transition: transform .35s cubic-bezier(.2,.8,.2,1), color .3s; }
   .bl-row:hover .bl-arrow, .bl-row:focus-visible .bl-arrow { transform: translateX(8px); color: #fff; }
-  .bl-row:hover .ca-img::before, .bl-row:focus-visible .ca-img::before { transform: translate(-6px, -2px); }
-  .bl-row:hover .ca-img::after, .bl-row:focus-visible .ca-img::after { transform: translate(6px, 2px); }
   .bl-row:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
   .bl-empty { color: #8d8d92; padding: 40px 0; }
   @media (max-width: 640px) {

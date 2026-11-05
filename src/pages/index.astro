@@ -75,7 +75,7 @@ const bg = (u?: string) => (u ? `--img:url("${encodeURI(u)}")` : '');
       <h2 class="home-h2 reveal">Latest</h2>
       <div class="posts reveal">
         {posts.map((p) => (
-          <a class="post" href={`/blog/${p.slug}/`}>
+          <a class="post rowtint" href={`/blog/${p.slug}/`}>
             <div class={`ca-img ${p.data.coverImage ? '' : 'empty'}`} style={bg(p.data.coverImage)}><i></i></div>
             <div><h3>{p.data.title}</h3>{p.data.summary && <p>{p.data.summary}</p>}</div>
             <time datetime={String(p.data.date)}>{fmt(p.data.date)}</time>

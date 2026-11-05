@@ -32,8 +32,6 @@ const headshot = about?.headshot || 'https://i.imgur.com/3LwyDts.png';
   .ab-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: start; }
   @media (max-width: 860px) { .ab-grid { grid-template-columns: 1fr; gap: 34px; } .ab-photo { max-width: 300px; } }
   .ab-img { aspect-ratio: 1/1; border-radius: 50%; }
-  .ab-photo:hover .ca-img::before { transform: translate(-7px, -2px); }
-  .ab-photo:hover .ca-img::after { transform: translate(7px, 2px); }
   .ab-text .page-title { font-size: clamp(40px, 7vw, 84px); }
   .ab-sub { margin: 20px 0 0; font-family: 'Inter', sans-serif; font-size: clamp(18px, 2.4vw, 26px); font-weight: 300; color: #d4d4d8; line-height: 1.3; }
   .ab-body { margin: 28px 0 0; font-size: 19px; line-height: 1.75; color: #c5c5ca; max-width: 34em; }
