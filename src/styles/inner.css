@@ -1,0 +1,17 @@
+/* Inner pages (portfolio, blog, about, contact): same black stage and chromatic accents as the home page. */
+.page { max-width: 1180px; margin: 0 auto; padding: 56px 22px 110px; }
+.page-label { font-family: 'Inter', sans-serif; font-size: 13px; letter-spacing: .22em; text-transform: uppercase; color: #8d8d92; font-weight: 500; margin: 0 0 14px; }
+.page-title { font-family: 'Inter', sans-serif; font-size: clamp(44px, 9vw, 112px); font-weight: 800; letter-spacing: -.045em; line-height: .95; margin: 0; text-shadow: -3px 0 rgba(255,42,95,.85), 3px 0 rgba(41,182,255,.85); }
+.page-sub { margin: 22px 0 0; max-width: 32em; font-size: clamp(17px, 2vw, 21px); font-weight: 300; color: #c5c5ca; line-height: 1.5; font-family: 'Inter', sans-serif; }
+.page-head { margin-bottom: 56px; }
+
+.pill { font: inherit; color: #e4e4e8; background: transparent; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 9px 18px; font-size: 14px; cursor: pointer; transition: background .25s, color .25s, border-color .25s, transform .25s; }
+.pill:hover { border-color: #fff; transform: translateY(-1px); }
+.pill[aria-pressed="true"] { background: #fff; color: #000; border-color: #fff; }
+
+.hair { border-top: 1px solid rgba(255,255,255,.16); }
+.text-link { color: #fff; text-decoration: underline; text-decoration-color: rgba(255,255,255,.4); text-underline-offset: 4px; transition: text-decoration-color .2s; }
+.text-link:hover { text-decoration-color: #fff; }
+.chroma-hover { transition: text-shadow .3s; }
+.chroma-hover:hover, a:hover > .chroma-hover, a:focus-visible > .chroma-hover { text-shadow: -2px 0 rgba(255,42,95,.9), 2px 0 rgba(41,182,255,.9); }
+@media (prefers-reduced-motion: reduce) { .pill, .chroma-hover { transition: none; } }

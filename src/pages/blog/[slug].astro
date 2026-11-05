@@ -11,57 +11,25 @@ const { post } = Astro.props;
 const { Content } = await post.render();
 ---
 <Layout title={post.data.title} description={post.data.summary} image={post.data.coverImage}>
-  <article class="max-w-4xl mx-auto py-16 px-6">
-    <!-- Back Button -->
-    <div class="mb-8">
-      <a href="/blog" class="back-button wc-card inline-flex items-center gap-3 px-6 py-3 group hover:scale-105 transition-all duration-300">
-        <svg class="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-        </svg>
-        Back to Blog
-      </a>
-    </div>
+  <article class="post-page">
+    <a href="/blog" class="post-back">← All posts</a>
 
-    <!-- Cover Image -->
-    {post.data.coverImage && (
-      <div class="cover-wrap mb-4">
-        <img src={post.data.coverImage} alt={post.data.title} class="cover-img" />
-      </div>
-    )}
-
-    <!-- Post Header -->
-    <header class="post-header wc-card p-8 mb-12">
-      <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gradient leading-tight mb-6">
-        {post.data.title}
-      </h1>
-      
-      <div class="flex items-center gap-4 text-sm text-neutral-400">
-        <time datetime={post.data.date} class="flex items-center gap-2">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
-          </svg>
-          {new Date(post.data.date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}
-        </time>
-        
-        {post.data.summary && (
-          <span class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
-            </svg>
-            {post.data.summary}
-          </span>
-        )}
-      </div>
+    <header class="post-head">
+      <time class="post-date" datetime={String(post.data.date)}>
+        {new Date(post.data.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+      </time>
+      <h1 class="post-title">{post.data.title}</h1>
+      {post.data.summary && <p class="post-summary">{post.data.summary}</p>}
     </header>
 
-    <!-- Post Content -->
-    <div class="post-content wc-card p-8 prose prose-invert prose-lg max-w-none">
+    {post.data.coverImage && (
+      <div class="cover-wrap"><img src={post.data.coverImage} alt={post.data.title} class="cover-img" /></div>
+    )}
+
+    <!-- Post content -->
+    <div class="post-content prose prose-invert prose-lg max-w-none">
       <Content />
-      
+
       {/* Render photo layout groups */}
       {post.data.imageGroups && post.data.imageGroups.length > 0 && (
         <div class="image-groups mt-8 space-y-8">
@@ -85,81 +53,29 @@ const { Content } = await post.render();
       )}
     </div>
 
-    <!-- Navigation Footer -->
-    <footer class="mt-12 flex justify-between">
-      <a href="/blog" class="wc-card px-6 py-3 group hover:scale-105 transition-all duration-300">
-        ← All Posts
-      </a>
-    </footer>
+    <footer class="post-foot"><a href="/blog" class="post-back">← All posts</a></footer>
   </article>
 </Layout>
 
 <style>
+  /* Page frame */
+  .post-page { max-width: 860px; margin: 0 auto; padding: 48px 22px 110px; }
+  .post-back { display: inline-block; color: #8d8d92; text-decoration: none; font-size: 14px; letter-spacing: .08em; transition: color .25s, transform .25s; }
+  .post-back:hover { color: #fff; transform: translateX(-3px); }
+  .post-head { margin: 36px 0 40px; }
+  .post-date { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #8d8d92; }
+  .post-title { margin: 12px 0 0; font-family: 'Inter', sans-serif; font-size: clamp(40px, 8vw, 88px); font-weight: 800; letter-spacing: -.045em; line-height: .96; text-shadow: -3px 0 rgba(255,42,95,.85), 3px 0 rgba(41,182,255,.85); }
+  .post-summary { margin: 22px 0 0; font-size: clamp(18px, 2.2vw, 22px); font-weight: 300; color: #c5c5ca; max-width: 34em; line-height: 1.5; font-family: 'Inter', sans-serif; }
+  .post-foot { margin-top: 70px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.16); }
+
   /* Cover image */
-  .cover-wrap {
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  }
+  .cover-wrap { margin: 0 0 44px; border-radius: 4px; overflow: hidden; }
+  .cover-img { width: 100%; height: auto; max-height: 560px; object-fit: cover; display: block; }
 
-  .cover-img {
-    width: 100%;
-    height: auto;
-    max-height: 420px;
-    object-fit: cover;
-    display: block;
-  }
-
-  /* Glass card styles matching the blog index */
-  .wc-card {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 20px 50px rgba(0,0,0,0.4);
-    border-radius: 16px;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  }
-
-  .wc-card:hover {
-    border-color: rgba(255,255,255,0.2);
-    box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.08) inset;
-  }
-
-  /* Back button specific styling */
-  .back-button {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  /* Post header and content animations */
-  .post-header, .post-content {
-    animation: fadeInUp 0.8s ease-out forwards;
-  }
-
-  .post-content {
-    animation-delay: 0.2s;
-  }
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Text gradient utility */
-  .text-gradient {
-    background: linear-gradient(135deg, #fafafa 0%, #a1a1aa 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+  .post-head, .post-content, .cover-wrap { animation: fadeInUp 0.8s ease-out both; }
+  .post-content { animation-delay: 0.15s; }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { .post-head, .post-content, .cover-wrap { animation: none; } }
 
   /* Enhanced prose styling */
   .prose {
@@ -178,14 +94,14 @@ const { Content } = await post.render();
   }
 
   .prose a {
-    color: #fbbf24;
+    color: #fff;
     text-decoration: none;
-    border-bottom: 1px solid transparent;
+    border-bottom: 1px solid rgba(255,255,255,.4);
     transition: border-color 0.3s ease;
   }
 
   .prose a:hover {
-    border-bottom-color: #fbbf24;
+    border-bottom-color: #fff;
   }
 
   .prose ul, .prose ol {
@@ -197,7 +113,7 @@ const { Content } = await post.render();
   }
 
   .prose blockquote {
-    border-left: 4px solid #fbbf24;
+    border-left: 2px solid #fff;
     padding-left: 1.5rem;
     margin: 2rem 0;
     font-style: italic;

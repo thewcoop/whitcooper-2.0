@@ -101,6 +101,7 @@ const bg = (u?: string) => (u ? `--img:url("${encodeURI(u)}")` : '');
       btn.setAttribute('aria-expanded', String(open));
     });
   });
-  const io = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.12 });
-  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+  if (!('IntersectionObserver' in window)) document.querySelectorAll('.reveal').forEach((el) => el.classList.add('in'));
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.12 }) : null;
+  if (io) document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 </script>
