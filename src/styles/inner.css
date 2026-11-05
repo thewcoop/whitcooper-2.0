@@ -6,7 +6,6 @@
 .page-head { margin-bottom: 56px; }
 
 .pill { font: inherit; color: #e4e4e8; background: transparent; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 9px 18px; font-size: 14px; cursor: pointer; transition: background .25s, color .25s, border-color .25s, transform .25s; }
-.pill:hover, .pill:focus-visible { border-color: transparent; transform: translateY(-1px); box-shadow: 0 0 0 1px #8b5cf6, 0 0 18px rgba(34,211,238,.45), 0 0 26px rgba(244,114,182,.35); }
 .pill[aria-pressed="true"] { background: #fff; color: #000; border-color: #fff; }
 
 .hair { border-top: 1px solid rgba(255,255,255,.16); }

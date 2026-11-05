@@ -38,21 +38,21 @@ const bg = (u?: string) => (u ? `--img:url("${encodeURI(u)}")` : '');
           <a class="proj reveal" href={watchUrl(p.data.videoURL)} target="_blank" rel="noopener noreferrer">
             <div class={`ca-img ${p.data.thumbnail ? '' : 'empty'}`} style={bg(p.data.thumbnail)}><i></i></div>
             <div class="tags">{p.data.tags.slice(0, 3).join(' · ')}</div>
-            <h3>{p.data.title}</h3>
+            <h3 class="chroma-hover">{p.data.title}</h3>
             {p.data.description && <p>{p.data.description.length > 130 ? p.data.description.slice(0, 127).trimEnd() + '…' : p.data.description}</p>}
           </a>
         ))}
       </div>
-      <a class="more-link reveal" href="/portfolio">See all work →</a>
+      <a class="more-link chroma-hover reveal" href="/portfolio">See all work →</a>
     </section>
 
     <section class="home-sec" id="what-i-do">
       <h2 class="home-h2 reveal">What I do</h2>
       <div class="skills reveal">
         {skills.map((s, i) => (
-          <div class="skill">
+          <div class="skill rowtint">
             <button type="button" aria-expanded="false" aria-controls={`skill-${i}`}>
-              <h3>{s.data.name}</h3><span class="plus" aria-hidden="true">+</span>
+              <h3 class="chroma-hover">{s.data.name}</h3><span class="plus" aria-hidden="true">+</span>
             </button>
             <div class="more" id={`skill-${i}`}>
               <div>
@@ -77,12 +77,12 @@ const bg = (u?: string) => (u ? `--img:url("${encodeURI(u)}")` : '');
         {posts.map((p) => (
           <a class="post rowtint" href={`/blog/${p.slug}/`}>
             <div class={`ca-img ${p.data.coverImage ? '' : 'empty'}`} style={bg(p.data.coverImage)}><i></i></div>
-            <div><h3>{p.data.title}</h3>{p.data.summary && <p>{p.data.summary}</p>}</div>
+            <div><h3 class="chroma-hover">{p.data.title}</h3>{p.data.summary && <p>{p.data.summary}</p>}</div>
             <time datetime={String(p.data.date)}>{fmt(p.data.date)}</time>
           </a>
         ))}
       </div>
-      <a class="more-link reveal" href="/blog">All posts →</a>
+      <a class="more-link chroma-hover reveal" href="/blog">All posts →</a>
     </section>
 
     <footer class="home-foot reveal">
