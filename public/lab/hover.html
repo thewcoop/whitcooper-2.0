@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Hover effects lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  @property --a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: #000; color: #f5f5f5; font: 16px/1.55 'Atkinson Hyperlegible', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 56px 22px 120px; }
+  h1.lab { font: 800 clamp(34px, 7vw, 64px)/1 Inter, sans-serif; letter-spacing: -.04em; margin: 0 0 12px; }
+  .lede { color: #a1a1aa; max-width: 36em; margin: 0 0 40px; font-weight: 300; font-size: 18px; font-family: Inter, sans-serif; }
+  .opt { border-top: 1px solid rgba(255,255,255,.16); padding: 42px 0 54px; }
+  .opt > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin-bottom: 8px; }
+  .opt .tag { font: 500 12px Inter; letter-spacing: .22em; text-transform: uppercase; color: #8d8d92; }
+  .opt h2 { margin: 0; font: 800 28px Inter; letter-spacing: -.03em; }
+  .opt .why { color: #a1a1aa; margin: 0 0 30px; max-width: 40em; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 26px; }
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+  .row3 { display: flex; flex-wrap: wrap; gap: 10px; margin: 26px 0 18px; }
+  .big { font: 800 clamp(40px, 8vw, 84px)/.98 Inter, sans-serif; letter-spacing: -.045em; margin: 0 0 30px; display: inline-block; }
+  .card { display: block; }
+  .card .pic { aspect-ratio: 16/10; background: #111 center/cover; border-radius: 4px; }
+  .card h3 { margin: 12px 0 2px; font: 800 22px Inter; letter-spacing: -.02em; }
+  .card p { margin: 0; color: #8d8d92; font-size: 14px; }
+  .rowlink { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 14px; padding: 18px 4px; border-bottom: 1px solid rgba(255,255,255,.16); }
+  .rowlink h3 { margin: 0; font: 800 clamp(24px, 4vw, 40px) Inter; letter-spacing: -.035em; }
+  .rowlink span { color: #8d8d92; }
+  .pillx { border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 9px 18px; font-size: 14px; color: #e4e4e8; background: transparent; font-family: inherit; }
+  .inline { color: #fff; font-size: 17px; }
+
+  /* ---------- CURRENT: red/teal split ---------- */
+  .cur .big { text-shadow: -3px 0 rgba(255,42,95,.85), 3px 0 rgba(41,182,255,.85); }
+  .cur .pic { position: relative; overflow: hidden; }
+  .cur .pic::before, .cur .pic::after { content: ''; position: absolute; inset: 0; background: inherit; background-blend-mode: multiply; mix-blend-mode: screen; opacity: .85; transition: transform .45s; }
+  .cur .pic::before { background-color: #ff2a5f; } .cur .pic::after { background-color: #29b6ff; }
+  .cur .card:hover .pic::before { transform: translate(-7px,-2px); } .cur .card:hover .pic::after { transform: translate(7px,2px); }
+  .cur .rowlink h3, .cur .inline { transition: text-shadow .3s; } .cur .rowlink:hover h3, .cur .inline:hover { text-shadow: -2px 0 rgba(255,42,95,.9), 2px 0 rgba(41,182,255,.9); }
+
+  /* ---------- A: glass sheen (light sweeping across glass) ---------- */
+  .A .sheen-t { color: transparent; background: linear-gradient(100deg, #dcdce2 0 40%, #ffffff 50%, #dcdce2 60% 100%) 100% 0 / 260% 100%; -webkit-background-clip: text; background-clip: text; transition: background-position 1s cubic-bezier(.2,.8,.2,1); }
+  .A a:hover .sheen-t, .A .sheen-t:hover, .A a:focus-visible .sheen-t { background-position: 0 0; }
+  .A .pic, .A .rowlink, .A .pillx { position: relative; overflow: hidden; }
+  .A .pic::after, .A .rowlink::after, .A .pillx::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 36%, rgba(255,255,255,.26) 48%, rgba(255,255,255,.06) 54%, transparent 64%); transform: translateX(-125%); transition: transform 1s cubic-bezier(.2,.8,.2,1); }
+  .A .card:hover .pic::after, .A .rowlink:hover::after, .A .pillx:hover::after { transform: translateX(125%); }
+  .A .pic { box-shadow: inset 0 0 0 1px rgba(255,255,255,.0); transition: box-shadow .5s, transform .5s cubic-bezier(.2,.8,.2,1); }
+  .A .card:hover .pic { box-shadow: inset 0 0 0 1px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.5); transform: translateY(-3px); }
+  .A .rowlink { transition: border-color .4s; } .A .rowlink:hover { border-color: rgba(255,255,255,.6); }
+  .A .pillx { transition: border-color .3s; } .A .pillx:hover { border-color: #fff; }
+
+  /* ---------- B: prism glow (colour bleeding through glass) ---------- */
+  .B .card { position: relative; isolation: isolate; }
+  .B .card::before { content: ''; position: absolute; z-index: -1; left: 6%; right: 6%; top: 8%; height: 78%; background: conic-gradient(from var(--a), #22d3ee, #3b82f6, #8b5cf6, #f472b6, #fbbf24, #22d3ee); filter: blur(44px); opacity: 0; transition: opacity .6s; }
+  .B .card:hover::before { opacity: .55; animation: spin 7s linear infinite; }
+  .B .card .pic { position: relative; }
+  .B .card .pic::after { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: conic-gradient(from var(--a), #22d3ee, #3b82f6, #8b5cf6, #f472b6, #fbbf24, #22d3ee); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0; transition: opacity .4s; pointer-events: none; }
+  .B .card:hover .pic::after { opacity: 1; animation: spin 5s linear infinite; }
+  @keyframes spin { to { --a: 360deg; } }
+  .B .draw { background: linear-gradient(90deg, #22d3ee, #8b5cf6, #f472b6, #fbbf24) no-repeat 0 100% / 0% 3px; padding-bottom: 4px; transition: background-size .55s cubic-bezier(.2,.8,.2,1); }
+  .B a:hover .draw, .B .draw:hover, .B a:focus-visible .draw { background-size: 100% 3px; }
+  .B .rowlink { position: relative; transition: background .4s; }
+  .B .rowlink:hover { background: linear-gradient(90deg, rgba(34,211,238,.08), rgba(139,92,246,.1), rgba(244,114,182,.08)); }
+  .B .pillx { background-clip: padding-box; transition: box-shadow .3s, border-color .3s; }
+  .B .pillx:hover { border-color: transparent; box-shadow: 0 0 0 1px #8b5cf6, 0 0 18px rgba(34,211,238,.45), 0 0 26px rgba(244,114,182,.35); }
+
+  /* ---------- C: living glass (light that follows the cursor) ---------- */
+  .C .glass { position: relative; overflow: hidden; --mx: 50%; --my: 50%; }
+  .C .glass::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .5s; mix-blend-mode: screen;
+    background:
+      radial-gradient(circle 70px at var(--mx) var(--my), transparent 66%, rgba(80,210,255,.45) 72%, rgba(160,120,255,.42) 80%, rgba(255,120,200,.38) 88%, transparent 96%),
+      radial-gradient(circle 190px at var(--mx) var(--my), rgba(255,255,255,.2), transparent 70%); }
+  .C .glass.hot::after { opacity: 1; }
+  .C .rowlink.glass::after { background: radial-gradient(circle 240px at var(--mx) var(--my), rgba(255,255,255,.13), rgba(130,170,255,.07) 45%, transparent 70%); }
+  .C .spot { --mx: 50%; color: transparent; background: radial-gradient(circle 240px at var(--mx) 50%, #ffffff 0%, #eceef3 55%, #bfc3d0 100%); -webkit-background-clip: text; background-clip: text; transition: filter .4s; }
+  .C .spot.cold { background: #f3f3f6; -webkit-background-clip: text; background-clip: text; }
+  .C .pillx { transition: border-color .3s; } .C .pillx:hover { border-color: #fff; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  .note { position: sticky; top: 0; z-index: 10; background: rgba(0,0,0,.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,.14); padding: 10px 22px; font: 500 13px Inter; color: #a1a1aa; text-align: center; }
+</style>
+</head>
+<body>
+<div class="note">Hover (or tap) the headings, cards, rows and pills in each version. Tell Claude your pick: A, B, C, or a mix.</div>
+<div class="wrap">
+  <h1 class="lab">Hover effects</h1>
+  <p class="lede">Same elements, four treatments. The first is what the site does now. The other three keep text crisp and echo the colorful glass of your home page.</p>
+  <div id="root"></div>
+</div>
+
+<script>
+const TXT = { cur: { tag: 'Now', name: 'Red and teal split', why: 'Ghosts text and images apart. This is the effect you said feels blurry.' },
+  A: { tag: 'Option A', name: 'Glass sheen', why: 'A soft band of light sweeps across, the way a highlight glides over glass. Text stays perfectly crisp. Quiet and elegant.' },
+  B: { tag: 'Option B', name: 'Prism glow', why: 'Colored light blooms behind and around what you touch, and a thin spectrum edge circles it. Headings draw a rainbow underline. The most colorful.' },
+  C: { tag: 'Option C', name: 'Living glass', why: 'A glass lens of light follows your cursor across cards and rows, with a thin rainbow rim like your hero orbs. Heading text is lit where you point. The most dynamic.' } };
+const sample = (k) => {
+  const t = k === 'A' ? 'sheen-t' : k === 'B' ? 'draw' : k === 'C' ? 'spot cold' : '';
+  const g = k === 'C' ? 'glass' : '';
+  return `
+  <section class="opt ${k}"><header><span class="tag">${TXT[k].tag}</span><h2>${TXT[k].name}</h2></header><p class="why">${TXT[k].why}</p>
+    <a href="#" class="big ${t}" onclick="return false">Portfolio</a>
+    <div class="grid">
+      <a href="#" class="card" onclick="return false"><div class="pic ${g}" style="background-image:url('/uploads/dscf4520_instagram-post_1080x1350_u_110_p3_gainmap.jpg')"></div><h3 class="${t}">Tokyo, Japan</h3><p>Black-and-white photos, X100VI</p></a>
+      <a href="#" class="card" onclick="return false"><div class="pic ${g}" style="background-image:url('/uploads/britishvirginislands_whitfuji.webp')"></div><h3 class="${t}">Vamos</h3><p>Sailing in the British Virgin Islands</p></a>
+    </div>
+    <a href="#" class="rowlink ${g}" onclick="return false"><h3 class="${t}">Editing</h3><span>+</span></a>
+    <a href="#" class="rowlink ${g}" onclick="return false"><h3 class="${t}">Motion Graphics</h3><span>+</span></a>
+    <div class="row3"><button class="pillx">Editing</button><button class="pillx">Motion Graphics</button><button class="pillx">VFX</button><button class="pillx">Color</button></div>
+    <a href="#" class="inline ${t}" onclick="return false">See all work →</a>
+  </section>`;
+};
+document.getElementById('root').innerHTML = ['cur', 'A', 'B', 'C'].map(sample).join('');
+document.querySelectorAll('.cur').forEach(() => {});
+
+// Option C: eased cursor-following light (no sudden jumps)
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.querySelectorAll('.C .glass, .C .spot').forEach((el) => {
+  const st = { x: 0, y: 0, tx: 0, ty: 0, on: false, raf: 0 };
+  const hostCard = el.closest('.card') || el;
+  const set = () => { el.style.setProperty('--mx', st.x + 'px'); el.style.setProperty('--my', st.y + 'px'); };
+  const tick = () => { st.x += (st.tx - st.x) * .14; st.y += (st.ty - st.y) * .14; set(); if (st.on || Math.abs(st.tx - st.x) > .5) st.raf = requestAnimationFrame(tick); else st.raf = 0; };
+  hostCard.addEventListener('pointerenter', (e) => { const r = el.getBoundingClientRect(); st.x = st.tx = e.clientX - r.left; st.y = st.ty = e.clientY - r.top; st.on = true; el.classList.add('hot'); el.classList.remove('cold'); if (!st.raf) st.raf = requestAnimationFrame(tick); });
+  hostCard.addEventListener('pointermove', (e) => { const r = el.getBoundingClientRect(); st.tx = e.clientX - r.left; st.ty = e.clientY - r.top; });
+  hostCard.addEventListener('pointerleave', () => { st.on = false; el.classList.remove('hot'); if (el.classList.contains('spot')) el.classList.add('cold'); });
+});
+</script>
+</body>
+</html>
