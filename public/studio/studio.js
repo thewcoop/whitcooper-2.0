@@ -212,19 +212,34 @@ async function shrinkImage(file) {
   return { blob, ext: type === 'image/webp' ? 'webp' : 'jpg' };
 }
 
-// Gallery photos: a full-size copy (2400 px on the long side) plus a small thumbnail (640 px) for fast browsing.
-async function processPhoto(file) {
+// Gallery photos come in three sizes so every screen gets a sharp picture without downloading too much:
+// a small one for the grid, a medium one for sharp (Retina) grids, and a large one for the full-screen viewer.
+// Photos are never enlarged. "High" is the default; "Maximum" is for portfolio-grade shots.
+const QUALITY = {
+  standard: { full: [2400, 0.88], med: [1400, 0.84], thumb: [720, 0.80], label: 'Standard' },
+  high: { full: [3200, 0.92], med: [1600, 0.88], thumb: [800, 0.84], label: 'High' },
+  maximum: { full: [4000, 0.95], med: [1800, 0.90], thumb: [900, 0.86], label: 'Maximum' },
+};
+async function processPhoto(file, preset = 'high') {
+  const q = QUALITY[preset] || QUALITY.high;
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-  const render = async (max, q) => {
+  const MAX_BYTES = 4_000_000;   // a single upload must stay under Netlify's ~6 MB request limit (base64 adds a third)
+  const render = async ([max, quality]) => {
     const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
     const c = document.createElement('canvas');
     c.width = Math.max(1, Math.round(bitmap.width * scale)); c.height = Math.max(1, Math.round(bitmap.height * scale));
-    c.getContext('2d').drawImage(bitmap, 0, 0, c.width, c.height);
-    let blob = await new Promise((r) => c.toBlob(r, 'image/webp', q)); let ext = 'webp';
-    if (!blob || blob.type !== 'image/webp') { blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', Math.min(0.92, q + 0.02))); ext = 'jpg'; }
-    return { blob, ext, w: c.width, h: c.height };
+    const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(bitmap, 0, 0, c.width, c.height);
+    const encode = async (qual) => {
+      let blob = await new Promise((r) => c.toBlob(r, 'image/webp', qual)); let ext = 'webp';
+      if (!blob || blob.type !== 'image/webp') { blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', Math.min(0.95, qual + 0.02))); ext = 'jpg'; }
+      return { blob, ext };
+    };
+    let out = await encode(quality);
+    // very detailed photos can be large even at a good setting: ease the quality just enough to fit
+    for (let qual = quality - 0.04; out.blob.size > MAX_BYTES && qual >= 0.72; qual -= 0.04) out = await encode(qual);
+    return { ...out, w: c.width, h: c.height };
   };
-  try { return { full: await render(2400, 0.88), thumb: await render(640, 0.8) }; } finally { bitmap.close?.(); }
+  try { return { full: await render(q.full), med: await render(q.med), thumb: await render(q.thumb) }; } finally { bitmap.close?.(); }
 }
 
 const toBase64 = (blob) => new Promise((resolve, reject) => {
@@ -537,7 +552,7 @@ const sectionTabs = (active) => h('div', { class: 'sections', role: 'tablist' },
   [['posts', 'Posts'], ['gallery', 'Gallery'], ['projects', 'Projects'], ['skills', 'Skills'], ['home', 'Home']].map(([k, label]) =>
     h('button', { role: 'tab', 'aria-selected': String(k === active), onclick: () => { if (k === active) return; k === 'posts' ? renderList() : site[k](); } }, label)));
 const textGrow = (t) => { t.style.height = 'auto'; t.style.height = `${t.scrollHeight + 2}px`; };
-site = makeSite({ h, api, mount, toast, pickPhotos, imgUrl, pending, slugify, tabs: sectionTabs, textGrow, chooseFiles, processPhoto, toBase64 });
+site = makeSite({ h, api, mount, toast, pickPhotos, imgUrl, pending, slugify, tabs: sectionTabs, textGrow, chooseFiles, processPhoto, toBase64, QUALITY });
 
 // ---------- boot ----------
 async function boot() {

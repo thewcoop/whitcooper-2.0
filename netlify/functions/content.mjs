@@ -9,7 +9,7 @@ export const config = { path: '/api/content/*' };
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,80}$/;
 const IMAGE_NAME = /^[a-z0-9][a-z0-9._-]{0,100}\.(jpe?g|png|webp|gif|avif)$/;
-const MAX_FILE_B64 = 7_000_000;
+const MAX_FILE_B64 = 5_800_000;   // Netlify rejects request bodies over ~6 MB
 const TAGS = ['Editing', 'Motion Graphics', 'VFX', 'Color', 'Sound Design'];
 const HOME_PATH = 'src/content/home/homepage.json';
 const SKILLS_DIR = 'src/content/skills';
@@ -76,6 +76,9 @@ function cleanGallery(slug, d) {
   out.photos = photos.map((p, i) => {
     if (!p || !ok.test(p.src || '') || !ok.test(p.thumb || '')) bad(`Photo ${i + 1} has an invalid file.`);
     const o = { src: p.src, thumb: p.thumb, w: int(p.w, 'Photo width'), h: int(p.h, 'Photo height') };
+    if (p.med) { if (!ok.test(p.med)) bad(`Photo ${i + 1} has an invalid medium file.`); o.med = p.med; }
+    if (p.tw != null) o.tw = int(p.tw, 'Thumbnail width');
+    if (p.mw != null) o.mw = int(p.mw, 'Medium width');
     if (p.caption) o.caption = str(p.caption, 200, 'Caption');
     if (p.alt) o.alt = str(p.alt, 200, 'Alt text');
     return o;

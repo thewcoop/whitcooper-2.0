@@ -23,9 +23,9 @@ const fmt = (d?: string | Date) => (d ? new Date(d).toLocaleDateString('en-US', 
 
     <div class="gl-grid" id="gl-grid">
       {photos.map((p, i) => (
-        <a class="gl-item" href={p.src} data-i={i} data-caption={p.caption ?? ''} data-alt={p.alt ?? p.caption ?? ''} style={`--r:${(p.w / p.h).toFixed(4)}`} aria-label={p.caption || `Open photo ${i + 1} of ${photos.length}`}>
+        <a class="gl-item" href={p.src} data-i={i} data-med={p.med ?? ''} data-caption={p.caption ?? ''} data-alt={p.alt ?? p.caption ?? ''} style={`--r:${(p.w / p.h).toFixed(4)}`} aria-label={p.caption || `Open photo ${i + 1} of ${photos.length}`}>
           <div class="ca-img gl-pic">
-            <img src={p.thumb} width={p.w} height={p.h} alt={p.alt || p.caption || ''} loading={i < 8 ? 'eager' : 'lazy'} decoding="async" />
+            <img src={p.thumb} srcset={p.med && p.tw && p.mw ? `${p.thumb} ${p.tw}w, ${p.med} ${p.mw}w` : undefined} sizes="(max-width: 560px) 50vw, (max-width: 1000px) 33vw, 380px" width={p.w} height={p.h} alt={p.alt || p.caption || ''} loading={i < 8 ? 'eager' : 'lazy'} decoding="async" />
           </div>
         </a>
       ))}
@@ -60,9 +60,9 @@ const fmt = (d?: string | Date) => (d ? new Date(d).toLocaleDateString('en-US', 
   const show = (i: number) => {
     index = (i + items.length) % items.length;
     const a = items[index];
-    const thumb = a.querySelector('img')!.getAttribute('src')!;
+    const placeholder = a.dataset.med || a.querySelector('img')!.getAttribute('src')!;
     img.alt = a.dataset.alt || '';
-    img.src = thumb;                               // instant placeholder while the full photo loads
+    img.src = placeholder;                         // instant stand-in (the sharper medium size if there is one) while the full photo loads
     const full = new Image();
     full.onload = () => { if (items[index] === a) img.src = full.src; };
     full.src = a.getAttribute('href')!;

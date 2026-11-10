@@ -5,7 +5,7 @@ import { splitFile } from './post-format.js';
 const TAGS = ['Editing', 'Motion Graphics', 'VFX', 'Color', 'Sound Design'];
 
 export function makeSite(ctx) {
-  const { h, api, mount, toast, pickPhotos, imgUrl, pending, slugify, tabs, textGrow, chooseFiles, processPhoto, toBase64 } = ctx;
+  const { h, api, mount, toast, pickPhotos, imgUrl, pending, slugify, tabs, textGrow, chooseFiles, processPhoto, toBase64, QUALITY } = ctx;
   const SAVED = 'Saved. The site rebuilds and updates in about a minute.';
 
   const field = (label, control, hint) => h('label', { class: 'field' }, label, control, hint ? h('span', { class: 'muted small' }, hint) : null);
@@ -254,12 +254,15 @@ export function makeSite(ctx) {
         if (!n || n.status !== 'queued' || active >= 2) continue;
         n.status = 'uploading'; active++;
         (async () => {
-          try { n.fullSha = n.fullSha || await upload(n.fullBlob); n.thumbSha = n.thumbSha || await upload(n.thumbBlob); n.status = 'done'; n.fullBlob = n.thumbBlob = null; }
+          try { n.thumbSha = n.thumbSha || await upload(n.thumbBlob); n.medSha = n.medSha || await upload(n.medBlob); n.fullSha = n.fullSha || await upload(n.fullBlob); n.status = 'done'; n.fullBlob = n.medBlob = n.thumbBlob = null; }
           catch (e) { n.status = 'error'; toast(`A photo didn't upload: ${e.message}`, 'bad'); }
           finally { active--; paint(); pump(); }
         })();
       }
     };
+    const pref = (() => { try { return localStorage.getItem('studio.photoQuality'); } catch { return null; } })();
+    const quality = h('select', { 'aria-label': 'Photo quality' }, Object.entries(QUALITY).map(([k, v]) => h('option', { value: k, ...((pref || 'high') === k ? { selected: true } : {}) }, `${v.label} quality`)));
+    quality.onchange = () => { try { localStorage.setItem('studio.photoQuality', quality.value); } catch { /* fine */ } };
     const add = h('button', {}, '+ Add photos');
     add.onclick = async () => {
       const filesPicked = await chooseFiles(true);
@@ -269,9 +272,9 @@ export function makeSite(ctx) {
       for (const file of filesPicked) {
         toast(`Preparing photo ${++done} of ${filesPicked.length}…`);
         try {
-          const { full, thumb } = await processPhoto(file);
+          const { full, med, thumb } = await processPhoto(file, quality.value);
           const base = `${slugify(file.name.replace(/\.[^.]+$/, '')).slice(0, 30)}-${Date.now().toString(36)}${done}`;
-          c.photos.push({ w: full.w, h: full.h, caption: '', _new: { name: `${base}.${full.ext}`, thumbName: `${base}-t.${thumb.ext}`, url: URL.createObjectURL(thumb.blob), fullBlob: full.blob, thumbBlob: thumb.blob, status: 'queued' } });
+          c.photos.push({ w: full.w, h: full.h, tw: thumb.w, mw: med.w, caption: '', _new: { name: `${base}.${full.ext}`, medName: `${base}-m.${med.ext}`, thumbName: `${base}-t.${thumb.ext}`, url: URL.createObjectURL(thumb.blob), fullBlob: full.blob, medBlob: med.blob, thumbBlob: thumb.blob, status: 'queued' } });
           paint(); pump(); dirty();
         } catch { toast(`Couldn't read “${file.name}”.`, 'bad'); }
       }
@@ -294,12 +297,12 @@ export function makeSite(ctx) {
         status.textContent = 'Saving…';
         const base = `/uploads/gallery/${address}`;
         const photos = c.photos.map((p) => p._new
-          ? { src: `${base}/${p._new.name}`, thumb: `${base}/${p._new.thumbName}`, w: p.w, h: p.h, ...(p.caption ? { caption: p.caption } : {}) }
-          : { src: p.src, thumb: p.thumb, w: p.w, h: p.h, ...(p.caption ? { caption: p.caption } : {}), ...(p.alt ? { alt: p.alt } : {}) });
+          ? { src: `${base}/${p._new.name}`, med: `${base}/${p._new.medName}`, thumb: `${base}/${p._new.thumbName}`, w: p.w, h: p.h, tw: p.tw, mw: p.mw, ...(p.caption ? { caption: p.caption } : {}) }
+          : { src: p.src, ...(p.med ? { med: p.med, mw: p.mw } : {}), thumb: p.thumb, w: p.w, h: p.h, ...(p.tw ? { tw: p.tw } : {}), ...(p.caption ? { caption: p.caption } : {}), ...(p.alt ? { alt: p.alt } : {}) });
         const idx = coverPhoto ? c.photos.indexOf(coverPhoto) : -1;
         const data = { title: c.title.trim(), description: c.description.trim(), date: c.date, draft: !!c.draft, cover: idx >= 0 ? photos[idx].src : '', photos };
-        const newFiles = c.photos.filter((p) => p._new).flatMap((p) => [{ path: `public${base}/${p._new.name}`, sha: p._new.fullSha }, { path: `public${base}/${p._new.thumbName}`, sha: p._new.thumbSha }]);
-        const deleteFiles = removed.flatMap((p) => [`public${p.src}`, `public${p.thumb}`]);
+        const newFiles = c.photos.filter((p) => p._new).flatMap((p) => [{ path: `public${base}/${p._new.name}`, sha: p._new.fullSha }, { path: `public${base}/${p._new.medName}`, sha: p._new.medSha }, { path: `public${base}/${p._new.thumbName}`, sha: p._new.thumbSha }]);
+        const deleteFiles = removed.flatMap((p) => [`public${p.src}`, `public${p.thumb}`, ...(p.med ? [`public${p.med}`] : [])]);
         await api(`/api/content/gallery/${address}`, { method: 'PUT', body: { data, newFiles, deleteFiles, isNew } });
         // the saved photos are now plain (already stored) photos
         c.photos = photos.map((p, i) => ({ ...p })); coverPhoto = idx >= 0 ? c.photos[idx] : null; removed.length = 0;
@@ -315,7 +318,7 @@ export function makeSite(ctx) {
     mount(h('div', { class: 'wrap' }, h('div', { class: 'topbar' }, h('button', { class: 'ghost', onclick: leave(st, gallery) }, '← Gallery'), h('div', { class: 'savebar' }, status, save)),
       h('div', { class: 'card meta' }, title, h('div', { class: 'two' }, field('Date', date), field('Web address', addr)), field('Description', desc),
         h('label', { class: 'row', style: 'gap:10px;font-size:.95rem;flex-wrap:nowrap;align-items:center' }, hidden, 'Hide this collection from the site (draft)')),
-      h('div', { class: 'row', style: 'margin:18px 0 10px;justify-content:space-between' }, h('div', { class: 'row' }, add, counter),
+      h('div', { class: 'row', style: 'margin:18px 0 10px;justify-content:space-between' }, h('div', { class: 'row' }, add, quality, counter),
         h('span', { class: 'muted small' }, 'Drag to reorder, or use the arrows. ★ sets the cover.')),
       grid, del ? h('div', { style: 'margin-top:28px' }, del) : null));
     paint();

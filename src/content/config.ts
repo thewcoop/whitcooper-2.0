@@ -63,9 +63,12 @@ const gallery = defineCollection({
     draft: z.boolean().optional(),           // hidden from the site
     photos: z.array(z.object({
       src: z.string(),                       // full-size image
+      med: z.string().optional(),            // medium image for sharp (Retina) grids
       thumb: z.string(),                     // small image for the grid
       w: z.number(),
       h: z.number(),
+      tw: z.number().optional(),             // pixel widths of thumb and med, so the browser can pick one
+      mw: z.number().optional(),
       caption: z.string().optional(),
       alt: z.string().optional(),
     })).default([]),

@@ -8,7 +8,7 @@ export const config = { path: ['/api/posts', '/api/posts/*'] };
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,80}$/;
 const IMAGE_NAME = /^[a-z0-9][a-z0-9._-]{0,100}\.(jpe?g|png|webp|gif|avif)$/;
-const MAX_FILE_B64 = 7_000_000;
+const MAX_FILE_B64 = 5_800_000;   // Netlify rejects request bodies over ~6 MB
 
 // Pulls the few fields the post list needs out of the YAML frontmatter.
 function summarize(name, raw) {

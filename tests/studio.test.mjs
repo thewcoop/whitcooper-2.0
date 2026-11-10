@@ -55,7 +55,7 @@ let passed = 0;
 const pass = (n) => { passed++; console.log('  PASS', n); };
 const section = (n) => console.log('\n' + n);
 const SHA = 'b'.repeat(40);
-const photo = (slug, n, extra = {}) => ({ src: `/uploads/gallery/${slug}/${n}.webp`, thumb: `/uploads/gallery/${slug}/${n}-t.webp`, w: 1200, h: 800, ...extra });
+const photo = (slug, n, extra = {}) => ({ src: `/uploads/gallery/${slug}/${n}.webp`, med: `/uploads/gallery/${slug}/${n}-m.webp`, thumb: `/uploads/gallery/${slug}/${n}-t.webp`, w: 3200, h: 2133, mw: 1600, tw: 800, ...extra });
 
 section('POSTS');
 assert.equal((await call(posts, '/api/posts', { auth: false })).status, 401); pass('needs sign-in');
@@ -97,27 +97,29 @@ assert.equal((await call(content, '/api/content/blob', { method: 'POST', body: {
 log.length = 0;
 r = await call(content, '/api/content/blob', { method: 'POST', body: { base64: 'QUJD' } }); j = await r.json(); assert.equal(r.status, 200); assert.ok(j.sha); assert.ok(!log.some((l) => l.commit)); pass('photo upload makes no commit (so no rebuild)');
 assert.equal((await call(content, '/api/content/blob', { method: 'POST', body: { base64: '' } })).status, 400); pass('rejects an empty upload');
-assert.equal((await call(content, '/api/content/blob', { method: 'POST', body: { base64: 'A'.repeat(7_000_001) } })).status, 400); pass('rejects an oversized upload');
+assert.equal((await call(content, '/api/content/blob', { method: 'POST', body: { base64: 'A'.repeat(5_800_001) } })).status, 400); pass('rejects an oversized upload');
 j = await (await call(content, '/api/content/gallery')).json(); assert.deepEqual(j.collections, [{ slug: 'tokyo', title: 'Tokyo', date: '2026-03-04', draft: false, count: 2, coverThumb: '/uploads/gallery/tokyo/a-t.webp' }]); pass('lists collections with count and cover thumbnail');
 assert.equal((await (await call(content, '/api/content/gallery/tokyo')).json()).data.photos.length, 2); pass('reads one collection');
 
 log.length = 0;
 r = await call(content, '/api/content/gallery/summer', { method: 'PUT', body: { isNew: true, data: { title: 'Summer', description: 'd', date: '2026-07-01', draft: true, cover: '/uploads/gallery/summer/p1.webp', photos: [photo('summer', 'p1', { caption: 'hi' }), photo('summer', 'p2')] },
-  newFiles: ['p1', 'p1-t', 'p2', 'p2-t'].map((n) => ({ path: `public/uploads/gallery/summer/${n}.webp`, sha: SHA })) } });
+  newFiles: ['p1', 'p1-m', 'p1-t', 'p2', 'p2-m', 'p2-t'].map((n) => ({ path: `public/uploads/gallery/summer/${n}.webp`, sha: SHA })) } });
 assert.equal(r.status, 200, await r.clone().text());
-let tree = lastTree(); assert.equal(tree.length, 5); assert.equal(tree[0].path, 'src/content/gallery/summer.json'); assert.ok(tree.slice(1).every((x) => x.sha === SHA)); assert.equal(log.filter((l) => l.commit).length, 1); pass('saves a collection and its photos in ONE commit');
-const saved = JSON.parse(blobText(tree[0].sha)); assert.equal(saved.title, 'Summer'); assert.equal(saved.draft, true); assert.equal(saved.cover, '/uploads/gallery/summer/p1.webp'); assert.equal(saved.photos.length, 2); assert.equal(saved.photos[0].caption, 'hi'); pass('the saved collection file has the right contents');
+let tree = lastTree(); assert.equal(tree.length, 7); assert.equal(tree[0].path, 'src/content/gallery/summer.json'); assert.ok(tree.slice(1).every((x) => x.sha === SHA)); assert.equal(log.filter((l) => l.commit).length, 1); pass('saves a collection and its photos in ONE commit');
+const saved = JSON.parse(blobText(tree[0].sha)); assert.equal(saved.title, 'Summer'); assert.equal(saved.draft, true); assert.equal(saved.cover, '/uploads/gallery/summer/p1.webp'); assert.equal(saved.photos.length, 2); assert.equal(saved.photos[0].caption, 'hi'); assert.equal(saved.photos[0].med, '/uploads/gallery/summer/p1-m.webp'); assert.equal(saved.photos[0].tw, 800); assert.equal(saved.photos[0].mw, 1600); pass('the saved collection has all three sizes and their widths');
 
 log.length = 0;
-r = await call(content, '/api/content/gallery/tokyo', { method: 'PUT', body: { data: { title: 'Tokyo', photos: [photo('tokyo', 'a')], cover: '/uploads/gallery/tokyo/zzz.webp' }, deleteFiles: ['public/uploads/gallery/tokyo/b.webp', 'public/uploads/gallery/tokyo/b-t.webp'] } });
+r = await call(content, '/api/content/gallery/tokyo', { method: 'PUT', body: { data: { title: 'Tokyo', photos: [photo('tokyo', 'a')], cover: '/uploads/gallery/tokyo/zzz.webp' }, deleteFiles: ['public/uploads/gallery/tokyo/b.webp', 'public/uploads/gallery/tokyo/b-m.webp', 'public/uploads/gallery/tokyo/b-t.webp'] } });
 assert.equal(r.status, 200); tree = lastTree();
-assert.deepEqual(tree.filter((x) => x.sha === null).map((x) => x.path), ['public/uploads/gallery/tokyo/b.webp', 'public/uploads/gallery/tokyo/b-t.webp']); pass('removing photos also deletes their files');
+assert.deepEqual(tree.filter((x) => x.sha === null).map((x) => x.path), ['public/uploads/gallery/tokyo/b.webp', 'public/uploads/gallery/tokyo/b-m.webp', 'public/uploads/gallery/tokyo/b-t.webp']); pass('removing photos also deletes their files');
 assert.equal(JSON.parse(blobText(tree[0].sha)).cover, undefined); pass('a cover that is not in the collection is dropped');
 
 const bad = async (label, slug, body) => { assert.equal((await call(content, `/api/content/gallery/${slug}`, { method: 'PUT', body })).status, 400, label); pass('rejects ' + label); };
 await bad('a missing title', 'x', { data: { title: '', photos: [] } });
 await bad('a photo from another collection', 'x', { data: { title: 'X', photos: [photo('other', 'p1')] } });
 await bad('path tricks in a photo path', 'x', { data: { title: 'X', photos: [{ ...photo('x', 'p1'), src: '/uploads/gallery/x/../../secret.webp' }] } });
+await bad('a medium file from another collection', 'x', { data: { title: 'X', photos: [photo('x', 'p1', { med: '/uploads/gallery/other/p1-m.webp' })] } });
+await bad('a non-numeric thumbnail width', 'x', { data: { title: 'X', photos: [photo('x', 'p1', { tw: 'big' })] } });
 await bad('a non-numeric photo size', 'x', { data: { title: 'X', photos: [photo('x', 'p1', { w: 'wide' })] } });
 await bad('more than 600 photos', 'x', { data: { title: 'X', photos: Array.from({ length: 601 }, (_, i) => photo('x', 'p' + i)) } });
 await bad('an uploaded file with a bad id', 'x', { data: { title: 'X', photos: [] }, newFiles: [{ path: 'public/uploads/gallery/x/p1.webp', sha: 'nothex' }] });

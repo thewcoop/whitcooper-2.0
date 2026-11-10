@@ -21,7 +21,7 @@ const fmt = (d?: string | Date) => (d ? new Date(d).toLocaleDateString('en-US', 
         return (
           <a class="gl-card reveal" href={`/gallery/${c.id}/`}>
             <div class="ca-img gl-cover">
-              <img src={cover.thumb} width={cover.w} height={cover.h} alt="" loading="lazy" decoding="async" />
+              <img src={cover.thumb} srcset={cover.med && cover.tw && cover.mw ? `${cover.thumb} ${cover.tw}w, ${cover.med} ${cover.mw}w` : undefined} sizes="(max-width: 560px) 100vw, (max-width: 960px) 50vw, 380px" width={cover.w} height={cover.h} alt="" loading="lazy" decoding="async" />
             </div>
             <span class="gl-meta">{c.data.photos.length} photo{c.data.photos.length === 1 ? '' : 's'}{c.data.date ? ` · ${fmt(c.data.date)}` : ''}</span>
             <span class="gl-name chroma-hover">{c.data.title}</span>

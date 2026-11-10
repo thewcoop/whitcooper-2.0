@@ -24,3 +24,19 @@ Use **Add this device** inside Studio to add your other devices.
 - `netlify/functions/auth.mjs` — passkey sign-in. Passkeys are stored in Netlify Blobs.
 - `netlify/functions/posts.mjs` — reads, saves and deletes posts and photos through the GitHub API (one commit per save).
 - Drafts have `draft: true` in the post and are hidden from the site.
+
+## Gallery
+
+Studio's **Gallery** tab holds photo collections shown at `/gallery`.
+
+- Each photo is saved in three sizes: a small one for the grid, a medium one for sharp (Retina) screens,
+  and a large one for the full-screen viewer. The browser picks the right one, and photos are never enlarged.
+- Choose **Standard**, **High** (default) or **Maximum** quality before adding photos. Higher quality means
+  sharper photos and larger files (a typical High photo is roughly 0.7 to 1.5 MB in total across all three sizes).
+- Photos upload in the background, and nothing rebuilds the site until you tap **Save to site**, which commits
+  the whole collection at once (one rebuild).
+- Each upload is kept under Netlify's 6 MB request limit automatically.
+- Photos live in the repo (`public/uploads/gallery/<collection>/`). If the repo gets large (past about 1,000 photos),
+  we'd move the images to a media host.
+
+Backend checks: `npm run test:studio`.
