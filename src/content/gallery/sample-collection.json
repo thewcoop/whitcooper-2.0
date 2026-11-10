@@ -1,0 +1,64 @@
+{
+  "title": "Sample collection (delete before launch)",
+  "description": "Temporary sample made from photos already on the site, so the gallery can be previewed.",
+  "date": "2026-11-10",
+  "cover": "/uploads/gallery/sample-collection/sample-1.jpg",
+  "photos": [
+    {
+      "src": "/uploads/gallery/sample-collection/sample-1.jpg",
+      "thumb": "/uploads/gallery/sample-collection/sample-1-t.jpg",
+      "w": 1080,
+      "h": 1350,
+      "caption": "Another cool street near Nakano Broadway"
+    },
+    {
+      "src": "/uploads/gallery/sample-collection/sample-2.webp",
+      "thumb": "/uploads/gallery/sample-collection/sample-2-t.webp",
+      "w": 2000,
+      "h": 1125,
+      "caption": "Sailing day"
+    },
+    {
+      "src": "/uploads/gallery/sample-collection/sample-3.jpg",
+      "thumb": "/uploads/gallery/sample-collection/sample-3-t.jpg",
+      "w": 1080,
+      "h": 1350
+    },
+    {
+      "src": "/uploads/gallery/sample-collection/sample-4.webp",
+      "thumb": "/uploads/gallery/sample-collection/sample-4-t.webp",
+      "w": 1331,
+      "h": 998
+    },
+    {
+      "src": "/uploads/gallery/sample-collection/sample-5.jpg",
+      "thumb": "/uploads/gallery/sample-collection/sample-5-t.jpg",
+      "w": 1080,
+      "h": 1350
+    },
+    {
+      "src": "/uploads/gallery/sample-collection/sample-6.webp",
+      "thumb": "/uploads/gallery/sample-collection/sample-6-t.webp",
+      "w": 1932,
+      "h": 1288
+    },
+    {
+      "src": "/uploads/gallery/sample-collection/sample-7.jpg",
+      "thumb": "/uploads/gallery/sample-collection/sample-7-t.jpg",
+      "w": 1080,
+      "h": 1350
+    },
+    {
+      "src": "/uploads/gallery/sample-collection/sample-8.jpg",
+      "thumb": "/uploads/gallery/sample-collection/sample-8-t.jpg",
+      "w": 1080,
+      "h": 1350
+    },
+    {
+      "src": "/uploads/gallery/sample-collection/sample-9.jpg",
+      "thumb": "/uploads/gallery/sample-collection/sample-9-t.jpg",
+      "w": 1080,
+      "h": 1350
+    }
+  ]
+}
