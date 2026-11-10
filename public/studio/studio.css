@@ -114,3 +114,18 @@ code { background: rgba(255,255,255,.1); padding: 2px 6px; border-radius: 6px; f
 .sections button { border: 0; background: transparent; min-height: 38px; white-space: nowrap; }
 .sections button[aria-selected="true"] { background: var(--card-2); }
 .chipbtn[aria-pressed="true"] { background: #fff; color: #06060a; border-color: #fff; font-weight: 600; }
+
+/* gallery editor */
+.gal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.gal-tile { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 8px; display: grid; gap: 8px; align-content: start; }
+.gal-tile.is-cover { border-color: #fbbf24; box-shadow: 0 0 0 1px rgba(251,191,36,.45); }
+.gal-tile.drag { opacity: .4; }
+.gal-img { aspect-ratio: 1; border-radius: 10px; background: var(--card-2) center/cover; position: relative; }
+.gal-busy { position: absolute; inset: 0; border-radius: 10px; background: rgba(0,0,0,.55); display: grid; place-items: center; font-size: .85rem; }
+.gal-tools { display: flex; gap: 2px; justify-content: space-between; }
+.gal-tools button { width: 34px; min-height: 34px; padding: 0; border-radius: 9px; font-size: 14px; }
+.gal-tools button[aria-pressed="true"] { color: #fbbf24; }
+.gal-tools button:disabled { opacity: .25; }
+.gal-cap { font-size: .85rem; padding: 8px 10px; min-height: 38px; }
+
+input[type="checkbox"] { width: 22px; height: 22px; min-height: 22px; padding: 0; accent-color: #8b5cf6; flex: none; border-radius: 6px; }

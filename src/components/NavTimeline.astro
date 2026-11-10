@@ -4,6 +4,7 @@ const { logo = true, overlay = false } = Astro.props;
 const items = [
   { href: '/', label: 'Home' },
   { href: '/portfolio', label: 'Portfolio' },
+  { href: '/gallery', label: 'Gallery' },
   { href: '/blog', label: 'Blog' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
@@ -31,7 +32,7 @@ function isPathActive(href: string, currentPath: string): boolean {
     </a>
   )}
   
-  <div class="relative flex items-center gap-8">
+  <div class="relative flex items-center gap-4 sm:gap-6 md:gap-8">
     {items.map(({href, label}) => {
       const isActive = isPathActive(href, currentPath);
       return (

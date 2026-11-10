@@ -46,7 +46,14 @@ export async function readFile(path, b) {
   return { sha: f.sha, raw: Buffer.from(f.content, 'base64').toString('utf8') };
 }
 
-// files: [{ path, content (utf8 string) | base64 (string) | delete: true }]
+// Uploads a file to the repo without committing it, so a batch of photos can be sent one by one
+// and then referenced from a single commit (one rebuild instead of one per photo).
+export async function createBlob(base64) {
+  const blob = await gh('/git/blobs', 'POST', { content: base64, encoding: 'base64' });
+  return blob.sha;
+}
+
+// files: [{ path, content (utf8 string) | base64 (string) | sha (already uploaded blob) | delete: true }]
 export async function commitFiles(message, files, b) {
   const ref = await gh(`/git/refs/heads/${b}`);
   const tip = await gh(`/git/commits/${ref.object.sha}`);
@@ -54,6 +61,10 @@ export async function commitFiles(message, files, b) {
   for (const f of files) {
     if (f.delete) {
       tree.push({ path: f.path, mode: '100644', type: 'blob', sha: null });
+      continue;
+    }
+    if (f.sha) {
+      tree.push({ path: f.path, mode: '100644', type: 'blob', sha: f.sha });
       continue;
     }
     const blob = await gh('/git/blobs', 'POST', f.base64

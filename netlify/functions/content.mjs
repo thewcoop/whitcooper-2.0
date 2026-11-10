@@ -3,7 +3,7 @@
 // Everything is validated here so a mistake in the editor can never produce a file that breaks the site build.
 import { json, readJson } from '../lib/http.mjs';
 import { isAuthed } from '../lib/session.mjs';
-import { listDir, readFile, commitFiles, branchFor, UPLOADS_DIR } from '../lib/github.mjs';
+import { listDir, readFile, commitFiles, createBlob, branchFor, UPLOADS_DIR } from '../lib/github.mjs';
 
 export const config = { path: '/api/content/*' };
 
@@ -14,6 +14,10 @@ const TAGS = ['Editing', 'Motion Graphics', 'VFX', 'Color', 'Sound Design'];
 const HOME_PATH = 'src/content/home/homepage.json';
 const SKILLS_DIR = 'src/content/skills';
 const PROJECTS_DIR = 'src/content/portfolio';
+const GALLERY_DIR = 'src/content/gallery';
+const GALLERY_IMG_DIR = `${UPLOADS_DIR}/gallery`;
+const SHA = /^[0-9a-f]{40}$/;
+const MAX_PHOTOS = 600;
 
 class Bad extends Error {}
 const bad = (msg) => { throw new Bad(msg); };
@@ -54,6 +58,29 @@ function cleanSkill(d) {
   const hl = Array.isArray(d.highlights) ? d.highlights : [];
   if (hl.length > 8) bad('A skill can have at most 8 highlights.');
   out.highlights = hl.map((h) => ({ item: str(typeof h === 'string' ? h : h?.item, 120, 'Highlight', { required: true }) }));
+  return out;
+}
+
+// ---- gallery collections: JSON listing photos stored under public/uploads/gallery/<slug>/
+const photoPath = (slug) => new RegExp(`^/uploads/gallery/${slug}/[a-z0-9][a-z0-9._-]{0,100}\\.(webp|jpe?g|png)$`);
+const repoPath = (slug) => new RegExp(`^${GALLERY_IMG_DIR}/${slug}/[a-z0-9][a-z0-9._-]{0,100}\\.(webp|jpe?g|png)$`);
+function cleanGallery(slug, d) {
+  if (!d || typeof d !== 'object') bad('Collection is missing its details.');
+  const ok = photoPath(slug);
+  const out = { title: str(d.title, 80, 'Title', { required: true }), description: str(d.description, 600, 'Description'), date: str(d.date, 40, 'Date') };
+  if (d.cover) { if (!ok.test(d.cover)) bad('The cover photo is not part of this collection.'); out.cover = d.cover; }
+  if (d.draft) out.draft = true;
+  const photos = Array.isArray(d.photos) ? d.photos : [];
+  if (photos.length > MAX_PHOTOS) bad(`A collection can hold up to ${MAX_PHOTOS} photos.`);
+  const int = (v, label) => { const n = Number(v); if (!Number.isInteger(n) || n < 1 || n > 12000) bad(`${label} must be a whole number.`); return n; };
+  out.photos = photos.map((p, i) => {
+    if (!p || !ok.test(p.src || '') || !ok.test(p.thumb || '')) bad(`Photo ${i + 1} has an invalid file.`);
+    const o = { src: p.src, thumb: p.thumb, w: int(p.w, 'Photo width'), h: int(p.h, 'Photo height') };
+    if (p.caption) o.caption = str(p.caption, 200, 'Caption');
+    if (p.alt) o.alt = str(p.alt, 200, 'Alt text');
+    return o;
+  });
+  if (out.cover && !out.photos.some((p) => p.src === out.cover)) delete out.cover;
   return out;
 }
 
@@ -128,6 +155,49 @@ export default async (req) => {
       }
       if (slug && req.method === 'DELETE') {
         await commitFiles(`Delete project "${slug}" via Studio`, [{ path, delete: true }], b);
+        return json({ ok: true });
+      }
+    }
+    // ---------- photo upload (no commit, no rebuild) ----------
+    if (collection === 'blob' && !slug && req.method === 'POST') {
+      const body = await readJson(req);
+      if (typeof body?.base64 !== 'string' || !body.base64 || body.base64.length > MAX_FILE_B64) bad('That photo is too large or empty.');
+      return json({ sha: await createBlob(body.base64) });
+    }
+
+    // ---------- gallery ----------
+    if (collection === 'gallery') {
+      if (!slug && req.method === 'GET') {
+        const files = await listDir(GALLERY_DIR, b, /\.json$/).catch((e) => (e.status === 404 ? [] : Promise.reject(e)));
+        const items = await Promise.all(files.map(async (f) => {
+          const d = JSON.parse((await readFile(f.path, b)).raw);
+          const cover = (d.photos || []).find((p) => p.src === d.cover) || (d.photos || [])[0];
+          return { slug: f.name.replace(/\.json$/, ''), title: d.title, date: d.date || '', draft: !!d.draft, count: (d.photos || []).length, coverThumb: cover?.thumb || '' };
+        }));
+        items.sort((x, y) => new Date(y.date) - new Date(x.date));
+        return json({ collections: items });
+      }
+      const path = `${GALLERY_DIR}/${slug}.json`;
+      if (slug && req.method === 'GET') return json({ slug, data: JSON.parse((await readFile(path, b)).raw) });
+      if (slug && req.method === 'PUT') {
+        const body = await readJson(req);
+        const data = cleanGallery(slug, body?.data);
+        const rp = repoPath(slug);
+        const files = [{ path, content: JSON.stringify(data, null, 2) + '\n' }];
+        for (const f of body.newFiles || []) {
+          if (!rp.test(f?.path || '') || !SHA.test(f?.sha || '')) bad('One of the photos was rejected.');
+          files.push({ path: f.path, sha: f.sha });
+        }
+        for (const p of body.deleteFiles || []) {
+          if (!rp.test(p || '')) bad('Cannot delete that file.');
+          files.push({ path: p, delete: true });
+        }
+        await commitFiles(`${body.isNew ? 'Add' : 'Update'} gallery "${data.title}" via Studio`, files, b);
+        return json({ ok: true, slug });
+      }
+      if (slug && req.method === 'DELETE') {
+        const imgs = await listDir(`${GALLERY_IMG_DIR}/${slug}`, b).catch((e) => (e.status === 404 ? [] : Promise.reject(e)));
+        await commitFiles(`Delete gallery "${slug}" via Studio`, [{ path, delete: true }, ...imgs.map((f) => ({ path: f.path, delete: true }))], b);
         return json({ ok: true });
       }
     }

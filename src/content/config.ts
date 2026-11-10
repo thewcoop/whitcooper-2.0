@@ -53,6 +53,25 @@ const home = defineCollection({
   }),
 });
 
+const gallery = defineCollection({
+  type: 'data',
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    date: z.union([z.string(), z.date()]).optional(),
+    cover: z.string().optional(),            // a photo's src; falls back to the first photo
+    draft: z.boolean().optional(),           // hidden from the site
+    photos: z.array(z.object({
+      src: z.string(),                       // full-size image
+      thumb: z.string(),                     // small image for the grid
+      w: z.number(),
+      h: z.number(),
+      caption: z.string().optional(),
+      alt: z.string().optional(),
+    })).default([]),
+  }),
+});
+
 const skills = defineCollection({
   type: 'data',
   schema: z.object({
@@ -85,4 +104,4 @@ const about = defineCollection({
   }),
 });
 
-export const collections = { blog, portfolio, home, skills, pages, about };
+export const collections = { blog, portfolio, home, skills, pages, about, gallery };

@@ -1,0 +1,49 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const collections = (await getCollection('gallery', ({ data }) => !data.draft && data.photos.length > 0))
+  .sort((a, b) => new Date(b.data.date ?? 0).getTime() - new Date(a.data.date ?? 0).getTime());
+const coverOf = (c: (typeof collections)[number]) => (c.data.photos.find((p) => p.src === c.data.cover) ?? c.data.photos[0]);
+const fmt = (d?: string | Date) => (d ? new Date(d).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '');
+---
+<Layout title="Gallery" description="Photo collections by Whit Cooper." image={collections[0] ? coverOf(collections[0]).src : undefined}>
+  <section class="page">
+    <header class="page-head reveal">
+      <p class="page-label">Photography</p>
+      <h1 class="page-title">Gallery</h1>
+      <p class="page-sub">Photo collections from trips and walks around.</p>
+    </header>
+
+    <div class="gl-index">
+      {collections.map((c) => {
+        const cover = coverOf(c);
+        return (
+          <a class="gl-card reveal" href={`/gallery/${c.id}/`}>
+            <div class="ca-img gl-cover">
+              <img src={cover.thumb} width={cover.w} height={cover.h} alt="" loading="lazy" decoding="async" />
+            </div>
+            <span class="gl-meta">{c.data.photos.length} photo{c.data.photos.length === 1 ? '' : 's'}{c.data.date ? ` · ${fmt(c.data.date)}` : ''}</span>
+            <span class="gl-name chroma-hover">{c.data.title}</span>
+            {c.data.description && <span class="gl-desc">{c.data.description}</span>}
+          </a>
+        );
+      })}
+    </div>
+
+    {collections.length === 0 && <p class="gl-empty">The first collection is on the way.</p>}
+  </section>
+</Layout>
+
+<style>
+  .gl-index { display: grid; grid-template-columns: repeat(3, 1fr); gap: 38px 20px; }
+  @media (max-width: 960px) { .gl-index { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .gl-index { grid-template-columns: 1fr; } }
+  .gl-card { display: grid; gap: 10px; align-content: start; text-decoration: none; color: inherit; }
+  .gl-card:focus-visible { outline: 2px solid #fff; outline-offset: 6px; }
+  .gl-cover { aspect-ratio: 4/5; border-radius: 4px; background: #111; }
+  .gl-meta { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #8d8d92; margin-top: 4px; }
+  .gl-name { font-family: 'Inter', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+  .gl-desc { color: #8d8d92; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .gl-empty { color: #8d8d92; padding: 40px 0; }
+</style>
